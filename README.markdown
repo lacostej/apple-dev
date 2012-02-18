@@ -6,8 +6,8 @@ They are used in continuous integration environments (for example using [Jenkins
 
 # required dependencies #
 
-to manipulate provisioning profiles, you will need [plist](http://plist.rubyforge.org/Plist.html)
-to access the Apple development center site, you will need [mechanize >= 2.2](http://mechanize.rubyforge.org/)
+to manipulate provisioning profiles, you will need [plist](http://plist.rubyforge.org/Plist.html) and [json](http://flori.github.com/json/)
+to access the Apple development center site, you will need [mechanize >= 2.2](http://mechanize.rubyforge.org/) and [encrypted_strings](https://github.com/pluginaweek/encrypted_strings)
 
 # provisioningprofile.rb #
 
@@ -29,10 +29,6 @@ to access the Apple development center site, you will need [mechanize >= 2.2](ht
 	distribution
 	$ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -d Name
 	TestFlight WWTK All Projects
-
-## Explanation ##
-
-Provisioning profiles are PKCS7 signed messages. The message itself is an XML plist. The script extracts the plist.
 
 # apple_dev_center.rb #
 
@@ -57,6 +53,32 @@ Provisioning profiles are PKCS7 signed messages. The message itself is an XML pl
 	        }
 	    ]
 	}
+
+## storing the password (encrypted in a configuration file instead) ##
+
+If you don't want to have your password on the command line (so that it doesn't appear in log files), you can generate a config file
+
+	$ ./generate_apple_dev_center_config.rb yourlogin@apple.com YourSecretPassword "an optional seed key" > /path/to/config/apple_dev_center.config
+	$ cat /path/to/config/apple_dev_center.config
+	--- 
+	default: yourlogin@apple.com
+	accounts: 
+	- password: l1/ChJtwxlmDnav8D4dZafRi6NOdme4Z
+	  login: yourlogin@apple.com
+
+then use the apple_dev_center script as following:
+
+	# to avoid having to place password information on the command line
+	$ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -C /path/to/config/apple_dev_center.config -S "an optional seed key" -d
+	[...]
+	# or to pick the default account and an empty secret key
+	$ ./apple_dev_center.rb -C /path/to/config/apple_dev_center.config -d 
+
+## Technical information ##
+
+Provisioning profiles are PKCS7 signed messages. The message itself is an XML plist. The script extracts the plist.
+
+	
 
 # Feedback #
 

@@ -3,8 +3,10 @@ require 'rubygems'
 require 'optparse'
 require 'mechanize'
 require 'json'
+require 'yaml'
+require 'encrypted_strings'
 
-USAGE =  "Usage: #{File.basename($0)} [-d [DIR]] [-u login] [-p password] [-O file] [-h]"
+USAGE =  "Usage: #{File.basename($0)} [-d [DIR]] [-u login] [-p password] [-O file] [-C config][-S secret_key] [-h]"
 
 class Profile
   attr_accessor :blobId, :type, :name, :appid, :statusXcode, :downloadUrl
@@ -34,6 +36,20 @@ def info(message)
   puts message
 end
 
+def parse_config(options)
+  config = YAML::load_file(options[:configFile])
+  
+  login_to_fetch = options[:login]
+  if login_to_fetch.nil? 
+    login_to_fetch = config['default']
+  end
+  account = config['accounts'].select { |a| a['login'] == login_to_fetch }[0]
+  secret_key = options[:secretKey].nil? ? "" : options[:secretKey]
+  encrypted = account['password']
+  decrypted = encrypted.decrypt(:symmetric, :password => secret_key)
+  options[:passwd] = decrypted
+end
+
 def parse_command_line(args)
   options = {}
 
@@ -53,6 +69,15 @@ def parse_command_line(args)
         Dir.mkdir(options[:dumpDir])
       end
     end
+    opts.on( '-S', '--seed SEED', 'the secret_key for the config file if required') do |secret_key|
+      options[:secretKey] = secret_key.nil? ? "" : secret_key
+    end
+    opts.on( '-C', '--config FILE', 'fetch password (and optionally default user) information from the specified config file, with the optional secret_key') do |config_file, secret_key|
+      options[:configFile] = config_file
+      if not File.exists?(options[:configFile])
+        raise OptionParser::InvalidArgument, "Specified '#{config_file}'file doesn't exists"
+      end
+    end
     opts.on( '-O', '--output FILE', 'writes output to the specified file. Uses standard output otherwise') do |output|
       options[:output] = output
     end
@@ -61,6 +86,8 @@ def parse_command_line(args)
       exit
     end    
   }.parse!(args)
+
+  parse_config(options) unless options[:configFile].nil?
 
   options
 end
