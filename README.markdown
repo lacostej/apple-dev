@@ -72,7 +72,31 @@ then use the apple_dev_center script as following:
 	$ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -C /path/to/config/apple_dev_center.config -S "an optional seed key" -d
 	[...]
 	# or to pick the default account and an empty secret key
-	$ ./apple_dev_center.rb -C /path/to/config/apple_dev_center.config -d 
+	$ ./apple_dev_center.rb -C /path/to/config/apple_dev_center.config -d
+	
+# use with Jenkins #
+
+in a CI environment, you will probably want to avoid printing out the password and use the config. I like the build secrets plugin to be able to send that to any slave.
+	
+here's a useful step by step job configuration
+
+0. generate your config file
+
+	./generate_apple_dev_center_config.rb yourlogin@apple.com YourSecretPassword "an optional seed key" > your_apple_dev_center.config
+	zip your_apple_dev_center.config.zip your_apple_dev_center.config
+
+1. a build step with the build secrets plugin in which you attach to a environement variable a zip file containing your config:
+
+    APPLE_DEV_CENTER_CONFIG => your_apple_dev_center.config.zip
+
+2. a shell script that creates an adc.zip file containing the site.json and related provisioning profiles
+	ls -lR $APPLE_DEV_CENTER_CONFIG
+	mkdir -p adc
+	rm -f adc/*
+	ruby ./apple_dev_center.rb -C $APPLE_DEV_CENTER_CONFIG/your_apple_dev_center.config -S "an optional seed key" -u yourlogin@apple.com -d -O adc/site.json
+	zip -r adc.zip adc/
+
+3. [optional] archive the artifact adc.zip, deploy it on a common place, etc
 
 ## Technical information ##
 
