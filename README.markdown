@@ -27,8 +27,7 @@ They are used in continuous integration environments (for example using [Jenkins
 
 ## Explanation ##
 
-Provisioning profiles are PKCS7 signed messages. The message itself is an XML plist. The script extracts the plist, and within it looks for the certificate information.
-The public key in the provisioning profile is then compared to the public key in the certificate file.
+Provisioning profiles are PKCS7 signed messages. The message itself is an XML plist. The script extracts the plist.
 
 ## Links ##
 
