@@ -7,10 +7,11 @@ require 'json'
 USAGE =  "Usage: #{File.basename($0)} [-d] [-u login] [-p password] [-O file] [-h]"
 
 class Profile
-  attr_accessor :blobId, :name, :appid, :statusXcode, :downloadUrl
+  attr_accessor :blobId, :type, :name, :appid, :statusXcode, :downloadUrl
   def to_json(*a)
     {
       'blobId' => blobId,
+      'type' => type,
       'name' => name,
       'appid' => appid,
       'statusXcode' => statusXcode
@@ -94,13 +95,14 @@ class AppleDeveloperCenter
     page
   end
 
-  def read_profiles(page)
+  def read_profiles(page, type)
     profiles = []
     # Format each row as name,udid
     rows = page.parser.xpath('//fieldset[@id="fs-0"]/table/tbody/tr')
     rows.each do |row|
       p = Profile.new()
       p.blobId = row.at_xpath('td[@class="checkbox"]/input/@value')
+      p.type = type
       p.name = row.at_xpath('td[@class="profile"]/a/span').text
       p.appid = row.at_xpath('td[@class="appid"]/text()')
       p.statusXcode = row.at_xpath('td[@class="statusXcode"]').text.strip.split("\n")[0]
@@ -112,10 +114,10 @@ class AppleDeveloperCenter
 
   def read_all_profiles(options)
     all_profiles = []
-    @profileUrls.each { |key, url|
-      info("Fetching #{key} profiles")
+    @profileUrls.each { |type, url|
+      info("Fetching #{type} profiles")
       page = load_page_or_login(url, options)
-      all_profiles.concat(read_profiles(page))
+      all_profiles.concat(read_profiles(page, type))
     } 
     all_profiles
   end

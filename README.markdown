@@ -42,7 +42,8 @@ Provisioning profiles are PKCS7 signed messages. The message itself is an XML pl
 	    "profiles": [
 	        {
 	            "name": "iOS Team Provisioning Profile: *",
-	            "appid": "D7NQRK----.*",
+	            "type": "development",
+				"appid": "D7NQRK----.*",
 	            "blobId": "65RAGE----",
 	            "statusXcode": "Active"
 	        }
