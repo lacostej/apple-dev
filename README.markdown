@@ -4,6 +4,11 @@ This is a set of scripts written in Ruby used to manage provisioning profiles ei
 
 They are used in continuous integration environments (for example using [Jenkins](http://jenkins-ci.org)) to update, compile & validate iOS (or [Unity3d](http://unity3d.com) projects.
 
+# required dependencies #
+
+to manipulate provisioning profiles, you will need [plist](http://plist.rubyforge.org/Plist.html)
+to access the Apple development center site, you will need [mechanize](http://mechanize.rubyforge.org/)
+
 # provisioningprofile.rb #
 
 	$ ruby ./mobileprovisioning.rb YEHUKG8P95.mobileprovision -d -O plist.xml
@@ -29,6 +34,10 @@ They are used in continuous integration environments (for example using [Jenkins
 
 Provisioning profiles are PKCS7 signed messages. The message itself is an XML plist. The script extracts the plist.
 
-## Links ##
+# Feedback #
+
+Question & feedback: jerome.lacoste@gmail.com
+
+# Links #
 
 https://github.com/quadion/iOSValidation
