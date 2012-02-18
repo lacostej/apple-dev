@@ -11,23 +11,23 @@ to access the Apple development center site, you will need [mechanize >= 2.2](ht
 
 # provisioningprofile.rb #
 
-	$ ruby ./mobileprovisioning.rb YEHUKG8P95.mobileprovision -d -O plist.xml
+	$ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -d -O plist.xml
 	$ tail plist.xml
 			<string>D7NQRKKW84</string>
 			</array>
 			<key>TimeToLive</key>
 			<integer>340</integer>
 			<key>UUID</key>
-			<string>A7D868EA-B1F3-4280-BD01-464653A7449D</string>
+			<string>A7D868EA-B1F3-4280-BD01-464653A-----</string>
 			<key>Version</key>
 			<integer>1</integer>
 		</dict>
 	</plist>
-	$ ruby ./mobileprovisioning.rb YEHUKG8P95.mobileprovision -d UUID
-	A7D868EA-B1F3-4280-BD01-464653A7449D
-	$ ruby ./mobileprovisioning.rb YEHUKG8P95.mobileprovision -t
+	$ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -d UUID
+	A7D868EA-B1F3-4280-BD01-464653A-----
+	$ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -t
 	distribution
-	$ ruby ./mobileprovisioning.rb YEHUKG8P95.mobileprovision -d Name
+	$ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -d Name
 	TestFlight WWTK All Projects
 
 ## Explanation ##
@@ -36,8 +36,10 @@ Provisioning profiles are PKCS7 signed messages. The message itself is an XML pl
 
 # apple_dev_center.rb #
 
-	$ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -p xxxxxxx -d -O site.json
-    $ prettyprint site.json
+	$ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -p xxxxxxx -d devcenter -O devcenter/site.json
+	$ ls devcenter/
+	65RAGE----.mobileprovision site.json
+	$ prettyprint devcenter/site.json
 	{
 	    "profiles": [
 	        {

@@ -4,7 +4,7 @@ require 'optparse'
 require 'mechanize'
 require 'json'
 
-USAGE =  "Usage: #{File.basename($0)} [-d] [-u login] [-p password] [-O file] [-h]"
+USAGE =  "Usage: #{File.basename($0)} [-d [DIR]] [-u login] [-p password] [-O file] [-h]"
 
 class Profile
   attr_accessor :blobId, :type, :name, :appid, :statusXcode, :downloadUrl
@@ -46,8 +46,12 @@ def parse_command_line(args)
     opts.on( '-p', '--password PASSWORD', 'the apple developer store login') do |passwd|
       options[:passwd] = passwd
     end
-    opts.on( '-d', '--dump', 'dumps the site content as JSON format') do |key|
+    opts.on( '-d', '--dump [DIR]', 'dumps the site content as JSON format (to the optional specified directory, that will be created if non existent)') do |dir|
       options[:dump] = true
+      options[:dumpDir] = dir.nil? ? "." : dir
+      if not File.exists?(options[:dumpDir])
+        Dir.mkdir(options[:dumpDir])
+      end
     end
     opts.on( '-O', '--output FILE', 'writes output to the specified file. Uses standard output otherwise') do |output|
       options[:output] = output
@@ -144,9 +148,9 @@ class AppleDeveloperCenter
     site
   end
   
-  def download_profiles(profiles)
+  def download_profiles(profiles, dumpDir)
     profiles.each do |p|
-      filename = "#{p.blobId}.mobileprovision"
+      filename = "#{dumpDir}/#{p.blobId}.mobileprovision"
       info("Saving profile #{p.blobId} '#{p.name} ' in #{filename}")
       @agent.download(p.downloadUrl, filename)
     end
@@ -156,7 +160,7 @@ end
 def dumpSite(options)
   @ADC = AppleDeveloperCenter.new()
   site = @ADC.fetch_site_data(options)
-  @ADC.download_profiles(site[:profiles])
+  @ADC.download_profiles(site[:profiles], options[:dumpDir])
   text = site.to_json
   dump(text, options[:output])
 end
