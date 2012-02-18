@@ -7,7 +7,7 @@ They are used in continuous integration environments (for example using [Jenkins
 # required dependencies #
 
 to manipulate provisioning profiles, you will need [plist](http://plist.rubyforge.org/Plist.html)
-to access the Apple development center site, you will need [mechanize](http://mechanize.rubyforge.org/)
+to access the Apple development center site, you will need [mechanize >= 2.2](http://mechanize.rubyforge.org/)
 
 # provisioningprofile.rb #
 
@@ -33,6 +33,27 @@ to access the Apple development center site, you will need [mechanize](http://me
 ## Explanation ##
 
 Provisioning profiles are PKCS7 signed messages. The message itself is an XML plist. The script extracts the plist.
+
+# apple_dev_center.rb #
+
+	$ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -p xxxxxxx -d -O site.json
+    $ prettyprint site.json
+	{
+	    "profiles": [
+	        {
+	            "name": "iOS Team Provisioning Profile: *",
+	            "appid": "D7NQRK----.*",
+	            "blobId": "65RAGE----",
+	            "statusXcode": "Active"
+	        }
+	    ],
+	    "devices": [
+	        {
+	            "name": "------- iPad 2 Wi-Fi",
+	            "udid": "96b9d40cdc20417928dd71c4a0cc03----------"
+	        }
+	    ]
+	}
 
 # Feedback #
 
