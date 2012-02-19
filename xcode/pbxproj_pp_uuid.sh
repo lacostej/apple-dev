@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# A script to extract the provisioning profile UUID from a XCode .pbxproj files given its configuration name
+# A script to get or set the provisioning profile UUID from a XCode .pbxproj files given its configuration name
 #
 debug=0
 plistBuddy=/usr/libexec/PlistBuddy
@@ -11,9 +11,11 @@ if [ ! -x $plistBuddy ]; then
 fi
 
 function usage() {
-	echo "USAGE: $0 file configuration value"
-	echo "file: the xcode project file"
-	echo "configuration: name of the configuration e.g. 'Ad Hoc'"
+	echo -e "USAGE: $0 file configuration action [value]"
+	echo -e "\tfile: the xcode project file"
+	echo -e "\tconfiguration: name of the configuration e.g. 'Ad Hoc'"
+	echo -e "\taction: get or set"
+	echo -e "\tvalue: the new uuid to set (if action is 'set')"
 }
 
 function debug() {
@@ -21,14 +23,34 @@ function debug() {
 		echo "DEBUG $1"
 	fi
 }
-
-if [ $# -lt 2 ]; then
+case "$#" in
+	4)
+	file=$1
+	configuration=$2
+	action=$3
+	new_uuid=$4
+	if [ "${action}" != "set" ]; then
+		echo "ERROR: invalid action or arguments for action $action"
+		usage
+		exit 1
+	fi
+	;;
+	3)
+	file=$1
+	configuration=$2
+	action=$3
+	if [ "${action}" != "get" ]; then
+		echo "ERROR: invalid action or arguments for action $action"
+		usage
+		exit 1
+	fi
+	;;
+	*)
 	echo "ERROR: invalid arguments"
 	usage
 	exit 1
-fi
-file=$1
-configuration=$2
+	;;
+esac
 
 if [ ! -f $file ]; then
 	echo "ERROR: $file file not found"
@@ -71,15 +93,28 @@ while [ 1 ]; do
 done
 
 debug "buildConfigurationObjId for $configuration: ${buildConfigurationObjId}"
-
-uuid=`$plistBuddy $file -c "Print objects:${buildConfigurationObjId}:buildSettings:PROVISIONING_PROFILE[sdk=iphoneos*]" 2>/dev/null`
-if [ $? -ne 0 ]; then
-	echo "ERROR: couldn't find uuid name for object '${buildConfigurationObjId}'"
+case "${action}" in
+set)
+    echo "$plistBuddy $file -c Set objects:${buildConfigurationObjId}:buildSettings:PROVISIONING_PROFILE[sdk=iphoneos*] ${new_uuid}"
+	uuid=`$plistBuddy $file -c "Set objects:${buildConfigurationObjId}:buildSettings:PROVISIONING_PROFILE[sdk=iphoneos*] ${new_uuid}" 2>/dev/null`
+	if [ $? -ne 0 ]; then
+		echo "ERROR: couldn't set the uuid to ${value} for object '${buildConfigurationObjId}'"
+		exit 1
+	fi
+	exit 0
+	;;
+get)
+	uuid=`$plistBuddy $file -c "Print objects:${buildConfigurationObjId}:buildSettings:PROVISIONING_PROFILE[sdk=iphoneos*]" 2>/dev/null`
+	if [ $? -ne 0 ]; then
+		echo "ERROR: couldn't find uuid name for object '${buildConfigurationObjId}'"
+		exit 1
+	fi
+	debug "uuid $uuid"
+	echo "$uuid"
+	exit 0
+	;;
+*)
+	echo "INVALID action $action"
 	exit 1
-fi
-debug "uuid $uuid"
-#codeSign=`$plistBuddy $file -c "Print objects:${buildConfigurationObjId}:buildSettings:CODE_SIGN_IDENTITY[sdk=iphoneos*]"`
-#debug "codeSign $codeSign"
-
-# 2- display the UUID
-echo "$uuid"
+	;;
+esac
