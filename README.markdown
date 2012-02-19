@@ -34,7 +34,7 @@ to access the Apple development center site, you will need [mechanize >= 2.2](ht
 
 	$ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -p xxxxxxx -d devcenter -O devcenter/site.json
 	$ ls devcenter/
-	65RAGE----.mobileprovision site.json
+	A7D868EA-B1F3-4280-BD01-464653A-----.mobileprovision site.json
 	$ prettyprint devcenter/site.json
 	{
 	    "profiles": [
@@ -42,7 +42,7 @@ to access the Apple development center site, you will need [mechanize >= 2.2](ht
 	            "name": "iOS Team Provisioning Profile: *",
 	            "type": "development",
 				"appid": "D7NQRK----.*",
-	            "blobId": "65RAGE----",
+	            "uuid": "A7D868EA-B1F3-4280-BD01-464653A-----",
 	            "statusXcode": "Active"
 	        }
 	    ],

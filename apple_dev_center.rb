@@ -6,17 +6,19 @@ require 'json'
 require 'yaml'
 require 'encrypted_strings'
 
+INSTALL_DIR = File.dirname($0)
 USAGE =  "Usage: #{File.basename($0)} [-d [DIR]] [-u login] [-p password] [-O file] [-C config][-S secret_key] [-h]"
 
 class Profile
-  attr_accessor :blobId, :type, :name, :appid, :statusXcode, :downloadUrl
+  attr_accessor :uuid, :blobId, :type, :name, :appid, :statusXcode, :downloadUrl
   def to_json(*a)
     {
-      'blobId' => blobId,
+      'uuid' => uuid,
       'type' => type,
       'name' => name,
       'appid' => appid,
       'statusXcode' => statusXcode
+#      'blobId' => blobId,      
 #      'downloadUrl' => downloadUrl,
     }.to_json(*a)
   end
@@ -172,7 +174,19 @@ class AppleDeveloperCenter
     site = {}
     site[:devices] = read_devices(options)
     site[:profiles] = read_all_profiles(options)
+
+    download_profiles(site[:profiles], options[:dumpDir])
+    
     site
+  end
+  
+  # return the uuid of the specified mobile provisioning file
+  def pp_uuid(ppfile)
+    # FIXME extract script into a reusable ruby library    
+    uuid = `#{INSTALL_DIR}/mobileprovisioning.rb #{ppfile} -d UUID`
+    # strip trailing \n
+    uuid = uuid[0..-2]
+    uuid
   end
   
   def download_profiles(profiles, dumpDir)
@@ -180,6 +194,9 @@ class AppleDeveloperCenter
       filename = "#{dumpDir}/#{p.blobId}.mobileprovision"
       info("Saving profile #{p.blobId} '#{p.name} ' in #{filename}")
       @agent.download(p.downloadUrl, filename)
+      uuid = pp_uuid filename 
+      p.uuid = uuid
+      File.rename(filename, "#{dumpDir}/#{uuid}.mobileprovision")
     end
   end
 end
@@ -187,7 +204,6 @@ end
 def dumpSite(options)
   @ADC = AppleDeveloperCenter.new()
   site = @ADC.fetch_site_data(options)
-  @ADC.download_profiles(site[:profiles], options[:dumpDir])
   text = site.to_json
   dump(text, options[:output])
 end
