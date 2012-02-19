@@ -2,6 +2,8 @@
 
 This is a set of scripts written in Ruby used to manage provisioning profiles either locally or through the Apple developer portal.
 
+The project also contains a few scripts related to managing the provisioning profiles in [xcode](xcode/)
+
 They are used in continuous integration environments (for example using [Jenkins](http://jenkins-ci.org)) to update, compile & validate iOS (or [Unity3d](http://unity3d.com) projects.
 
 # required dependencies #
