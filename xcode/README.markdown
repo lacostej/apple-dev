@@ -11,6 +11,13 @@ Useful to automatically update configuration on CI environments when a provision
 
 The scripts expects the profiles file & data information to be stored in the format created by the apple_dev_center.rb script.
 
+# use with jenkins #
+
+Our use case is unattended builds for Unity3d projects. Those projects generate xcode projects that aren't stored in subversion. Yet there have been configured to automtically deploy to testfight and thus required an update of the provisionning profile both in xcode organizer and in the generated xcode project to take new devices into account.
+
+on jenkins you probably already have a job that dumps the apple developer center information locally using the apple_dev_center.rb
+
+You can use something like xcode_update_pp.sh in order to automate the installation of updated provisioning profiles. See example_xcode_update.sh for an example on how to call that script.
 
 # Links #
 
