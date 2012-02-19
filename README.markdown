@@ -105,7 +105,13 @@ here's a useful step by step job configuration
 
 Provisioning profiles are PKCS7 signed messages. The message itself is an XML plist. The script extracts the plist.
 
-	
+# TODO #
+
+I am considering the following improvements
+
+  * extract out the password storage functionality into an reusable encrypted password store for use by ruby scripts (in CI environments)
+  * package the ruby scripts into libs and a gem to ease installation and update
+  * add some functions to upload devices or sync an externally managed list of devices onto the apple developer center
 
 # Feedback #
 
