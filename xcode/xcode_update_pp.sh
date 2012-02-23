@@ -27,6 +27,11 @@ printStatus
 current_pp_uuid=`./pbxproj_pp_uuid.sh $file "$configuration" get`
 debug "current_pp_uuid ${current_pp_uuid}"
 
+if [ -z "${current_pp_uuid}" ]; then
+	echo "ERROR no selected provisioning profile in XCode project file for configuration '$configuration'. The script only supports updating the configuration today."
+	exit 1
+fi
+
 if [ $? -ne 0 ]; then
 	echo "ERROR Profile UUID not found in $file for configuration $configuration"
 	exit

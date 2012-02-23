@@ -7,6 +7,10 @@ Here is a list of actions one can perform:
  * install or update a provisioning profile so that the xcode organizer folder is updated
  * update the selected provisioning profile in a xcode project file (.pbxproj)
 
+*Note*: because of a limitation in our XCode project file editor, we are today unable to set a provisioning profile if none was already selected. If you rely on xcode to select your profile, the script will fail with something like:
+
+    ERROR no selected provisioning profile in XCode project file for configuration 'Ad Hoc'. The script only supports updating the configuration today.
+
 Useful to automatically update configuration on CI environments when a provisioning profile has changed, e.g. when the associated device list was updated.
 
 The scripts expects the profiles file & data information to be stored in the format created by the apple_dev_center.rb script.
