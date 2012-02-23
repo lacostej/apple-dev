@@ -192,11 +192,13 @@ class AppleDeveloperCenter
   def download_profiles(profiles, dumpDir)
     profiles.each do |p|
       filename = "#{dumpDir}/#{p.blobId}.mobileprovision"
-      info("Saving profile #{p.blobId} '#{p.name} ' in #{filename}")
+      info("Downloading profile #{p.blobId} '#{p.name}'")
       @agent.download(p.downloadUrl, filename)
       uuid = pp_uuid filename 
       p.uuid = uuid
-      File.rename(filename, "#{dumpDir}/#{uuid}.mobileprovision")
+      newfilename = "#{dumpDir}/#{uuid}.mobileprovision"
+      File.rename(filename, "#{newfilename}")
+      info("Saved profile #{p.uuid} '#{p.name}' in #{newfilename}")
     end
   end
 end
