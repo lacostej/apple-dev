@@ -136,6 +136,7 @@ class AppleDeveloperCenter
       p = Profile.new()
       p.blobId = row.at_xpath('td[@class="checkbox"]/input/@value')
       p.type = type
+      next if row.at_xpath('td[@class="profile"]/a/span').nil?
       p.name = row.at_xpath('td[@class="profile"]/a/span').text
       p.appid = row.at_xpath('td[@class="appid"]/text()')
       p.statusXcode = row.at_xpath('td[@class="statusXcode"]').text.strip.split("\n")[0]
