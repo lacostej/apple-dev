@@ -1,6 +1,6 @@
 # What is this? #
 
-This is a set of scripts written in Ruby used to manage provisioning profiles either locally or through the Apple developer portal.
+This is a set of scripts written in Ruby used to manage provisioning profiles and certificates either locally or through the Apple developer portal.
 
 The project also contains a few scripts related to managing the provisioning profiles in [xcode](iOSprovisioningprofiles/tree/master/xcode/)
 
@@ -36,9 +36,19 @@ to access the Apple development center site, you will need [mechanize >= 2.2](ht
 
 	$ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -p xxxxxxx -d devcenter -O devcenter/site.json
 	$ ls devcenter/
-	A7D868EA-B1F3-4280-BD01-464653A-----.mobileprovision site.json
+	A7D868EA-B1F3-4280-BD01-464653A-----.mobileprovision site.json DL29------.cer
 	$ prettyprint devcenter/site.json
 	{
+	    "certificates":[
+	        {
+	    	    "name":"XXXXXXXXXXXXXX",
+	    	    "displayId":"DL29------",
+	    	    "profile":"TestFlight XXXX All Projects",
+	    	    "type":"distribution",
+	    	    "status":"Issued",
+	    	    "exp_date":"Jan 22, 2013"
+	    	}
+	    ],
 	    "profiles": [
 	        {
 	            "name": "iOS Team Provisioning Profile: *",

@@ -24,6 +24,22 @@ class Profile
   end
 end
 
+class Certificate
+  attr_accessor :displayId, :type, :name, :exp_date, :profile, :status, :downloadUrl
+  def to_json(*a)
+    {
+      'displayId' => displayId,
+      'type' => type,
+      'name' => name,
+      'exp_date' => exp_date,
+      'status' => status,
+      'profile' => profile
+#      'downloadUrl' => downloadUrl,
+    }.to_json(*a)
+  end
+end
+
+
 class Device
   attr_accessor :udid, :name
   def to_json(*a)
@@ -110,6 +126,10 @@ class AppleDeveloperCenter
     @profileUrls[:development] = "https://developer.apple.com/ios/manage/provisioningprofiles/index.action"
     @profileUrls[:distribution] = "https://developer.apple.com/ios/manage/provisioningprofiles/viewDistributionProfiles.action"
 
+    @certificateUrls = {}
+    @certificateUrls[:development] = "https://developer.apple.com/ios/manage/certificates/team/index.action"
+    @certificateUrls[:distribution] = "https://developer.apple.com/ios/manage/certificates/team/distribute.action"
+
     @devicesUrl = "https://developer.apple.com/ios/manage/devices/index.action"
   end
   
@@ -156,6 +176,61 @@ class AppleDeveloperCenter
     all_profiles
   end
 
+  def read_certificates_distribution(page, type)
+    certs = []
+    # Format each row as name,udid  
+    rows = page.parser.xpath('//div[@class="nt_multi"]/table/tbody/tr')
+    rows.each do |row|
+      last_elt = row.at_xpath('td[@class="action last"]')
+      next if last_elt.at_xpath('form').nil?
+      c = Certificate.new()
+      # :displayId, :type, :name, :exp_date, :profiles, :status, :downloadUrl
+      c.downloadUrl = last_elt.at_xpath('a/@href')
+      c.displayId = c.downloadUrl.to_s.split("certDisplayId=")[1]
+      c.type = type
+      c.name = row.at_xpath('td[@class="name"]/a').text
+      c.exp_date = row.at_xpath('td[@class="expdate"]').text.strip
+      # unsure if one certificate can be mapped to several profiles
+      c.profile = row.at_xpath('td[@class="profile"]').text.strip
+      c.status = row.at_xpath('td[@class="status"]').text.strip
+      certs << c
+    end
+    certs
+  end
+  
+  def read_certificates_development(page, type)
+    certs = []
+    # Format each row as name,udid  
+    rows = page.parser.xpath('//div[@class="nt_multi"]/table/tbody/tr')
+    rows.each do |row|
+      last_elt = row.at_xpath('td[@class="last"]')
+      next if last_elt.at_xpath('form').nil?
+      c = Certificate.new()
+      # :displayId, :type, :name, :exp_date, :profiles, :status, :downloadUrl
+      c.downloadUrl = last_elt.at_xpath('a/@href')
+      c.displayId = c.downloadUrl.to_s.split("certDisplayId=")[1]
+      c.type = type
+      c.name = row.at_xpath('td[@class="name"]/div/p').text
+      c.exp_date = row.at_xpath('td[@class="date"]').text.strip
+      # unsure if one certificate can be mapped to several profiles
+      c.profile = row.at_xpath('td[@class="profiles"]').text.strip
+      c.status = row.at_xpath('td[@class="status"]').text.strip
+      certs << c
+    end
+    certs
+  end  
+
+  def read_all_certificates(options)
+    all_certs = []
+    info("Fetching development certificates")
+    page = load_page_or_login(@certificateUrls[:development], options)    
+    all_certs.concat(read_certificates_development(page, :development))
+    info("Fetching distribution certificates")
+    page = load_page_or_login(@certificateUrls[:distribution], options)    
+    all_certs.concat(read_certificates_distribution(page, :distribution))
+    all_certs
+  end
+
   def read_devices(options)
     info("Fetching devices")
     page = load_page_or_login(@devicesUrl, options)
@@ -175,8 +250,10 @@ class AppleDeveloperCenter
     site = {}
     site[:devices] = read_devices(options)
     site[:profiles] = read_all_profiles(options)
+    site[:certificates] = read_all_certificates(options)
 
     download_profiles(site[:profiles], options[:dumpDir])
+    download_certificates(site[:certificates], options[:dumpDir])
     
     site
   end
@@ -200,6 +277,15 @@ class AppleDeveloperCenter
       newfilename = "#{dumpDir}/#{uuid}.mobileprovision"
       File.rename(filename, "#{newfilename}")
       info("Saved profile #{p.uuid} '#{p.name}' in #{newfilename}")
+    end
+  end
+
+  def download_certificates(certs, dumpDir)
+    certs.each do |c|
+      filename = "#{dumpDir}/#{c.displayId}.cer"
+      info("Downloading cert #{c.displayId} -#{c.type}- '#{c.name}'")
+      @agent.download(c.downloadUrl, filename)
+      info("Saved cert #{c.displayId} '#{c.name}' in #{filename}")
     end
   end
 end
