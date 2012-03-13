@@ -185,6 +185,7 @@ class AppleDeveloperCenter
       return certs
     end
     rows.each do |row|
+      next if row.nil?
       last_elt = row.at_xpath('td[@class="action last"]')
       next if last_elt.at_xpath('form').nil?
       c = Certificate.new()
