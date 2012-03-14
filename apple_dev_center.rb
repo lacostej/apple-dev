@@ -180,13 +180,15 @@ class AppleDeveloperCenter
     certs = []
     # Format each row as name,udid  
     rows = page.parser.xpath('//div[@class="nt_multi"]/table/tbody/tr')
-    if rows.nil?
-      info("No distribution certificates found.")
-      return certs
-    end
     rows.each do |row|
-      next if row.nil?
       last_elt = row.at_xpath('td[@class="action last"]')
+      if last_elt.nil?
+        msg_elt = row.at_xpath('td[@colspan="4"]/span')
+        if !msg_elt.nil?
+          info("-->#{msg_elt.text}")
+        end
+        next
+      end
       next if last_elt.at_xpath('form').nil?
       c = Certificate.new()
       # :displayId, :type, :name, :exp_date, :profiles, :status, :downloadUrl
