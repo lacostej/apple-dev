@@ -7,7 +7,7 @@ require 'yaml'
 require 'encrypted_strings'
 
 INSTALL_DIR = File.dirname($0)
-USAGE =  "Usage: #{File.basename($0)} [-d [DIR]] [-u login] [-p password] [-O file] [-C config][-S secret_key] [-h]"
+USAGE =  "Usage: #{File.basename($0)} [-d [DIR]] [-u login] [-p password] [-O file] [-C config][-S secret_key] [-n] [-h]"
 
 class Profile
   attr_accessor :uuid, :blobId, :type, :name, :appid, :statusXcode, :downloadUrl
@@ -70,6 +70,7 @@ end
 
 def parse_command_line(args)
   options = {}
+  options[:profileFileName] = :uuid
 
   OptionParser.new { |opts|
     opts.banner = USAGE
@@ -79,6 +80,9 @@ def parse_command_line(args)
     end
     opts.on( '-p', '--password PASSWORD', 'the apple developer store login') do |passwd|
       options[:passwd] = passwd
+    end
+    opts.on( '-n', '--name', 'use the profile name instead of its UUID as basename when saving them') do
+      options[:profileFileName] = :name
     end
     opts.on( '-d', '--dump [DIR]', 'dumps the site content as JSON format (to the optional specified directory, that will be created if non existent)') do |dir|
       options[:dump] = true
@@ -259,7 +263,7 @@ class AppleDeveloperCenter
     site[:profiles] = read_all_profiles(options)
     site[:certificates] = read_all_certificates(options)
 
-    download_profiles(site[:profiles], options[:dumpDir])
+    download_profiles(site[:profiles], options[:dumpDir], options[:profileFileName])
     download_certificates(site[:certificates], options[:dumpDir])
     
     site
@@ -274,14 +278,19 @@ class AppleDeveloperCenter
     uuid
   end
   
-  def download_profiles(profiles, dumpDir)
+  def download_profiles(profiles, dumpDir, profileFileName)
     profiles.each do |p|
       filename = "#{dumpDir}/#{p.blobId}.mobileprovision"
       info("Downloading profile #{p.blobId} '#{p.name}'")
       @agent.download(p.downloadUrl, filename)
       uuid = pp_uuid filename 
       p.uuid = uuid
-      newfilename = "#{dumpDir}/#{uuid}.mobileprovision"
+      if profileFileName == :uuid
+        basename = p.uuid
+      else
+        basename = p.name
+      end
+      newfilename = "#{dumpDir}/#{basename}.mobileprovision"
       File.rename(filename, "#{newfilename}")
       info("Saved profile #{p.uuid} '#{p.name}' in #{newfilename}")
     end
