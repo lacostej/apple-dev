@@ -4,7 +4,7 @@ require "plist"
 require "openssl"
 require "optparse"
 
-USAGE =  "Usage: #{File.basename($0)} profileFile [-t] [-d [key]] [-O output] [-h]"
+USAGE = "Usage: #{File.basename($0)} profileFile [-t] [-d [key]] [-c certificate] [-O output] [-h]"
 
 def ensure_file_specified_and_exists(name, file)
   raise OptionParser::MissingArgument, name if file.nil?
@@ -30,7 +30,10 @@ def parse_command_line(args)
     opts.on( '-h', '--help', 'Display this screen' ) do
       puts opts
       exit
-    end    
+    end
+    opts.on('-c', '--certificate CERTIFICATE', 'Use CERTIFICATE to verify profile.') do |certificate|
+      options[:certificate] = certificate
+    end
   }.parse!(args)
 
   options[:profile] = args[0]
@@ -74,12 +77,38 @@ def main()
   end
   
   profile = File.read(options[:profile])
-
   p7 = OpenSSL::PKCS7.new(profile)
+  
+  verification = 'false'
+  if options[:certificate] != nil
+    #curl http://www.apple.com/appleca/AppleIncRootCertificate.cer -o AppleIncRootCertificate.cer
+    store = OpenSSL::X509::Store.new
+    cert = OpenSSL::X509::Certificate.new(File.read(options[:certificate])) 
+    store.add_cert(cert)
+    verification = p7.verify([cert], store)
+  end
 
-  store = OpenSSL::X509::Store.new
-  p7.verify([], store)
-
+=begin
+  puts("Type:                  #{p7.type}")
+  puts("Verification:          #{verification}")
+  puts("Signers:               #{p7.signers.size}")
+  p7.signers.each do |signer|
+    puts("SignerInfo.Issuer:     #{signer.name}")
+    puts("SignerInfo.Serial:     #{signer.serial}")
+    puts("SignerInfo.SignedTime: #{signer.signed_time}")
+  end
+  puts("Recipients:            #{p7.recipients.size}")
+  p7.recipients.each do |recipient|
+    puts("RecipientInfo.EncKey:  #{recipient.enc_key}")
+    puts("RecipientInfo.issuer:  #{recipient.issuer}")
+    puts("RecipientInfo.serial:  #{recipient.serial}")
+  end
+  puts("Certificates:          #{p7.certificates.size}")
+  p7.certificates.each do |certificate|
+    puts certificate.to_text
+  end
+=end
+  
   text = p7.data
 
   if (options[:dump])
