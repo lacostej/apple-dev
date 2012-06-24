@@ -1,40 +1,63 @@
 #!/usr/bin/ruby
+require 'optparse'
+require 'ostruct'
 require 'rubygems'
 require 'encrypted_strings'
 require 'yaml'
 
-case ARGV.size 
-when 3
-  login=ARGV[0]
-  password=ARGV[1]
-  secret_key=ARGV[2]
-when 2
-  login=ARGV[0]
-  password=ARGV[1]
-  secret_key=''
-else
-  puts "ERROR: wrong number of arguments"
-  puts "USAGE: #{File.basename($0)} login password [secret_key] generates a YAML config file for apple_dev_center.rb"
+# Set default options.
+opts = OpenStruct.new
+opts.login = ""
+opts.password = ""
+opts.secret_key = ""
+opts.teamid = ""
+
+# Specify options.
+options = OptionParser.new do |options|
+  options.banner = "Usage: #{File.basename($0)} [options]\nGenerates a YAML config file for apple_dev_center.rb"
+  options.separator "Mandatory options:"
+  options.on("-l", "--login LOGIN", "Login e-mail address") {|l| opts.login = l}
+  options.on("-p", "--password PASS", "Login password") {|p| opts.password = p}
+  options.separator "Optional options:"
+  options.on("-t", "--team-id TID", "Team ID - The team ID from the Multiple Developer Programs") {|t| opts.teamid = t}
+  options.on("-s", "--secret-key SECRET-KEY", "Secret key") {|s| opts.secret_key = s}
+  options.separator "General options:"
+  options.on_tail("-h", "--help", "Show this message") do
+    puts options
+    exit
+  end
+end
+
+# Show usage if no arguments are given.
+if (ARGV.empty?)
+  puts options
+  exit
+end
+
+# Parse options.
+begin 
+  options.parse!
+rescue
+  puts options
   exit 1
 end
 
-crypted_password = password.encrypt(:symmetric, :password => secret_key).to_s
+crypted_password = opts.password.encrypt(:symmetric, :password => opts.secret_key).to_s
 
 data={}
-data['default'] = login
+data['default'] = opts.login
 
-# force to string
+# Force to string
 encrypted = '' + crypted_password
-# remove trailing /n s
-while encrypted[-1] == 10
-  encrypted = encrypted[0..-2]
-end
+# Remove trailing carriage return characters (\n, \r, and \r\n)
+encrypted = encrypted.chomp()
 
 account = {}
-account['login'] = login
-account['password'] = '' + encrypted
+account['login'] = opts.login
+account['password'] = encrypted
+account['teamid'] = opts.teamid
 
-data['accounts'] = [ account ]
+data['accounts'] = [account]
 
 s = YAML::dump(data)
 
