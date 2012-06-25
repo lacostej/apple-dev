@@ -304,7 +304,9 @@ class AppleDeveloperCenter
   def fetch_site_data(options)
     site = {}
     @apple_cert_file = "#{options[:dumpDir]}/AppleIncRootCertificate.cer"
-    @agent.get(@apple_cert_url).save(@apple_cert_file)
+    if not File.exists?(@apple_cert_file)
+      @agent.get(@apple_cert_url).save(@apple_cert_file)
+    end
 
     site[:devices] = read_devices(options)
     site[:profiles] = read_all_profiles(options)
