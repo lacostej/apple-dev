@@ -71,14 +71,14 @@ to access the Apple development center site, you will need [mechanize >= 2.2](ht
 
 If you don't want to have your password on the command line (so that it doesn't appear in log files), you can generate a config file.
 
-	$ ./generate_apple_dev_center_config.rb -l yourlogin@apple.com -p YourSecretPassword -s "an optional seed key" > /path/to/config/apple_dev_center.config
-	$ cat /path/to/config/apple_dev_center.config
-  ---
-  default: yourlogin@apple.com
-  accounts:
-  - login: yourlogin@apple.com
-    password: l1/ChJtwxlmDnav8D4dZafRi6NOdme4Z
-    teamid: ''
+    $ ./generate_apple_dev_center_config.rb -l yourlogin@apple.com -p YourSecretPassword -s "an optional seed key" > /path/to/config/apple_dev_center.config
+    $ cat /path/to/config/apple_dev_center.config
+    ---
+    default: yourlogin@apple.com
+    accounts:
+    - login: yourlogin@apple.com
+      password: l1/ChJtwxlmDnav8D4dZafRi6NOdme4Z
+      teamid: ''
 
 Then use the apple_dev_center.rb script as following:
 
