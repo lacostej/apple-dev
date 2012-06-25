@@ -12,26 +12,26 @@ To manipulate provisioning profiles, you will need [plist](http://plist.rubyforg
 to access the Apple development center site, you will need [mechanize >= 2.2](http://mechanize.rubyforge.org/) and [encrypted_strings](https://github.com/pluginaweek/encrypted_strings).
 
 # mobileprovisioning.rb #
-  
-  $ wget http://www.apple.com/appleca/AppleIncRootCertificate.cer
-  $ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -d -O plist.xml
-  $ tail plist.xml
-      <string>D7NQRKKW84</string>
-      </array>
-      <key>TimeToLive</key>
-      <integer>340</integer>
-      <key>UUID</key>
-      <string>A7D868EA-B1F3-4280-BD01-464653A-----</string>
-      <key>Version</key>
-      <integer>1</integer>
-    </dict>
-  </plist>
-  $ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -d UUID
-  A7D868EA-B1F3-4280-BD01-464653A-----
-  $ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -t
-  distribution
-  $ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -d Name
-  TestFlight WWTK All Projects
+
+    $ wget http://www.apple.com/appleca/AppleIncRootCertificate.cer
+    $ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -d -O plist.xml
+    $ tail plist.xml
+        <string>D7NQRKKW84</string>
+        </array>
+        <key>TimeToLive</key>
+        <integer>340</integer>
+        <key>UUID</key>
+        <string>A7D868EA-B1F3-4280-BD01-464653A-----</string>
+        <key>Version</key>
+        <integer>1</integer>
+      </dict>
+    </plist>
+    $ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -d UUID
+    A7D868EA-B1F3-4280-BD01-464653A-----
+    $ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -t
+    distribution
+    $ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -d Name
+    TestFlight WWTK All Projects
 
 # apple_dev_center.rb #
 
