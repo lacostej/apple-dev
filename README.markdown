@@ -100,6 +100,10 @@ Select a team, if you are a member of multiple teams, by giving the team id:
 
     $ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -p xxxxxxx -t 2xxxxxxxx6 -d devcenter -O devcenter/site.json
 
+Or save the team to the config file:
+
+    $ ./generate_apple_dev_center_config.rb -l yourlogin@apple.com -p YourSecretPassword -t 2xxxxxxxx6 -s "an optional seed key"
+
 # Use with Jenkins #
 
 In a CI environment, you will probably want to avoid printing out the password and use the config. I like the build secrets plugin to be able to send that to any slave.
