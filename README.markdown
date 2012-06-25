@@ -96,13 +96,25 @@ To use a proxy set the environment variable `https_proxy`:
     https_proxy=https://proxy.yourcompany:port/
 
 ## Select a team ##
-Select a team, if you are a member of multiple teams, by giving the team id:
+Select a team, if you are a member of multiple teams:
 
+    # By the team id
     $ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -p xxxxxxx -t 2xxxxxxxx6 -d devcenter -O devcenter/site.json
+
+    # By the team name
+    $ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -p xxxxxxx -T "My development team" -d devcenter -O devcenter/site.json
 
 Or save the team to the config file:
 
+    # Team id
     $ ./generate_apple_dev_center_config.rb -l yourlogin@apple.com -p YourSecretPassword -t 2xxxxxxxx6 -s "an optional seed key"
+
+    # Team name
+    $ ./generate_apple_dev_center_config.rb -l yourlogin@apple.com -p YourSecretPassword -T "My development team" -s "an optional seed key"
+
+The team id has precedence over the team name. 
+
+The first team from the team selection is selected by default if neither team id nor team name are given.
 
 # Use with Jenkins #
 
