@@ -4,7 +4,7 @@ This is a set of scripts written in Ruby used to manage provisioning profiles an
 
 The project also contains a few scripts related to managing the provisioning profiles in [Xcode](iOSprovisioningprofiles/tree/master/xcode/).
 
-They are used in continuous integration environments (for example  [Jenkins](http://jenkins-ci.org)) to update, compile & validate iOS (or [Unity3d](http://unity3d.com) projects.
+They are used in continuous integration environments (for example  [Jenkins](http://jenkins-ci.org)) to update, compile & validate iOS or [Unity3d](http://unity3d.com) projects.
 
 # Required dependencies #
 
@@ -14,24 +14,24 @@ to access the Apple development center site, you will need [mechanize >= 2.2](ht
 # mobileprovisioning.rb #
   
   $ wget http://www.apple.com/appleca/AppleIncRootCertificate.cer
-	$ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -d -O plist.xml
-	$ tail plist.xml
-			<string>D7NQRKKW84</string>
-			</array>
-			<key>TimeToLive</key>
-			<integer>340</integer>
-			<key>UUID</key>
-			<string>A7D868EA-B1F3-4280-BD01-464653A-----</string>
-			<key>Version</key>
-			<integer>1</integer>
-		</dict>
-	</plist>
-	$ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -d UUID
-	A7D868EA-B1F3-4280-BD01-464653A-----
-	$ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -t
-	distribution
-	$ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -d Name
-	TestFlight WWTK All Projects
+  $ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -d -O plist.xml
+  $ tail plist.xml
+      <string>D7NQRKKW84</string>
+      </array>
+      <key>TimeToLive</key>
+      <integer>340</integer>
+      <key>UUID</key>
+      <string>A7D868EA-B1F3-4280-BD01-464653A-----</string>
+      <key>Version</key>
+      <integer>1</integer>
+    </dict>
+  </plist>
+  $ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -d UUID
+  A7D868EA-B1F3-4280-BD01-464653A-----
+  $ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -t
+  distribution
+  $ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -c AppleIncRootCertificate.cer -d Name
+  TestFlight WWTK All Projects
 
 # apple_dev_center.rb #
 
