@@ -91,14 +91,14 @@ Then use the apple_dev_center.rb script as following:
 ## Use a proxy ##
 
 To use a proxy set the environment variable `https_proxy`:
-  $ export https_proxy=https://proxy.yourcompany:port/
-  $ env|grep https_proxy
-  https_proxy=https://proxy.yourcompany:port/
+    $ export https_proxy=https://proxy.yourcompany:port/
+    $ env|grep https_proxy
+    https_proxy=https://proxy.yourcompany:port/
 
 ## Select a team ##
 
 Select a team, if you are a member of multiple teams, by giving the team id:
-	$ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -p xxxxxxx -t 2xxxxxxxx6 -d devcenter -O devcenter/site.json
+    $ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -p xxxxxxx -t 2xxxxxxxx6 -d devcenter -O devcenter/site.json
 
 # Use with Jenkins #
 
