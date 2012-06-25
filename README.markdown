@@ -143,6 +143,6 @@ Question & feedback: jerome.lacoste@gmail.com
 
 # Links #
 
-https://github.com/quadion/iOSValidation where I got some tips for parsing provisioning profiles
-http://www.peerassembly.com/2011/09/30/Downloading-UDID-From-Apple/ where I got some tips for downloading data from Apple developer center
-[Xcode “Build and Archive” from command line](http://stackoverflow.com/questions/2664885/xcode-build-and-archive-from-command-line/10981634#10981634)
+* https://github.com/quadion/iOSValidation where I got some tips for parsing provisioning profiles
+* http://www.peerassembly.com/2011/09/30/Downloading-UDID-From-Apple/ where I got some tips for downloading data from Apple developer center
+* [Xcode “Build and Archive” from command line](http://stackoverflow.com/questions/2664885/xcode-build-and-archive-from-command-line/10981634#10981634)
