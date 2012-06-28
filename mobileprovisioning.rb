@@ -79,13 +79,16 @@ def main()
   profile = File.read(options[:profile])
   p7 = OpenSSL::PKCS7.new(profile)
   
-  verification = 'false'
+  store = OpenSSL::X509::Store.new
+  
   if options[:certificate] != nil
     #curl http://www.apple.com/appleca/AppleIncRootCertificate.cer -o AppleIncRootCertificate.cer
-    store = OpenSSL::X509::Store.new
-    cert = OpenSSL::X509::Certificate.new(File.read(options[:certificate])) 
+    cert = OpenSSL::X509::Certificate.new(File.read(options[:certificate]))
     store.add_cert(cert)
     verification = p7.verify([cert], store)
+  else
+    p7.verify([], store)
+    verification = 'false'
   end
 
 =begin
