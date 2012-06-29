@@ -27,10 +27,10 @@ printStatus
 current_pp_uuid=`./pbxproj_pp_uuid.sh $file "$configuration" get`
 debug "current_pp_uuid ${current_pp_uuid}"
 
-#if [ -z "${current_pp_uuid}" ]; then
-#	echo "ERROR no selected provisioning profile in XCode project file for configuration '$configuration'. The script only supports updating the configuration today."
-#	exit 1
-#fi
+if [ -z "${current_pp_uuid}" ]; then
+	echo "ERROR no selected provisioning profile in XCode project file for configuration '$configuration'. The script only supports updating the configuration today."
+	exit 1
+fi
 
 if [ $? -ne 0 ]; then
 	echo "ERROR Profile UUID not found in $file for configuration $configuration"
@@ -65,7 +65,7 @@ if [ "${current_pp_uuid}" == "${new_pp_uuid}" ]; then
 else
 	echo "INFO Replacing ${current_pp_uuid} with ${new_pp_uuid} in $file"
 	# this doesn't work as it converts the file into XML and we lose the comments
-	echo ./pbxproj_pp_uuid.sh $file "$configuration" set $new_pp_uuid
+	#echo ./pbxproj_pp_uuid.sh $file "$configuration" set $new_pp_uuid
 	sed "s/${current_pp_uuid}/${new_pp_uuid}/"  ${file} > ${file}.new
 	if [ $? -ne 0 ]; then
     	echo "ERROR: failure to set new ${configuration} provisioning profile to ${new_pp} in ${file}. Exiting"
