@@ -4,8 +4,6 @@ require "plist"
 require "openssl"
 require "optparse"
 
-USAGE = "Usage: #{File.basename($0)} profileFile [-t] [-d [key]] [-c certificate] [-O output] [-h]"
-
 def ensure_file_specified_and_exists(name, file)
   raise OptionParser::MissingArgument, name if file.nil?
   raise OptionParser::InvalidArgument, "'#{file}' #{name} file doesn't exists" if not File.exists?(file)
@@ -14,27 +12,45 @@ end
 def parse_command_line(args)
   options = {}
 
-  OptionParser.new { |opts|
-    opts.banner = USAGE
+  opts = OptionParser.new { |opts|
+    opts.banner = "Usage: #{File.basename($0)} profileFile options"
+    opts.separator("Options:")
     
-    opts.on( '-d', '--dump [KEY]', 'dumps a particular key or the full xml') do |key|
+    opts.on( '-d', '--dump [KEY]', 'Dump a particular KEY or the full XML.') do |key|
       options[:dump] = true
       options[:dumpKey] = key
     end
-    opts.on( '-t', '--type', 'prints the type of the profile. distribution or development') do |key|
+    opts.on( '-t', '--type', 'Prints the type of the profile (distribution or development).') do |key|
       options[:type] = true
     end
-    opts.on( '-O', '--output FILE', 'writes output to the specified file. Uses standard output otherwise') do |output|
+    opts.on( '-o', '--output FILE', 'Write output to FILE. Default is standard output.') do |output|
       options[:output] = output
-    end
-    opts.on( '-h', '--help', 'Display this screen' ) do
-      puts opts
-      exit
     end
     opts.on('-c', '--certificate CERTIFICATE', 'Use CERTIFICATE to verify profile.') do |certificate|
       options[:certificate] = certificate
     end
-  }.parse!(args)
+    options[:verbose] = false
+    opts.on('-v', '--verbose', "Show the profile's type, verification, signers, recipients and certificates.") do
+      options[:verbose] = true
+    end
+    opts.on_tail( '-h', '--help', 'Display this screen.' ) do
+      puts opts
+      exit
+    end
+  }
+  
+  if (args.empty?)
+    puts opts
+    exit
+  end
+  
+  begin 
+    opts.parse!(args)
+  rescue OptionParser::ParseError => e
+    puts "Found #{e}"
+    puts opts
+    exit 1
+  end
 
   options[:profile] = args[0]
   ensure_file_specified_and_exists("profile", options[:profile])
@@ -52,11 +68,15 @@ end
 
 def dumpProfile(xml, options)
   text = xml
-  if (options[:dumpKey])
-    r = Plist::parse_xml(xml)  
-    text = r[options[:dumpKey]]
+  if text.nil?
+    puts "The profile content is nil. Maybe the verification failed? Try -v."
+  else
+    if (options[:dumpKey])
+      r = Plist::parse_xml(xml)  
+      text = r[options[:dumpKey]]
+    end
+    dump(text, options[:output])
   end
-  dump(text, options[:output])
 end
 
 def dumpProfileType(xml, options)
@@ -68,13 +88,7 @@ def dumpProfileType(xml, options)
 end
 
 def main()
-  begin
-    options = parse_command_line(ARGV)
-  rescue OptionParser::ParseError => e
-    puts "Invalid argument: #{e}"
-    puts "#{USAGE}"
-    exit 1
-  end
+  options = parse_command_line(ARGV)
   
   profile = File.read(options[:profile])
   p7 = OpenSSL::PKCS7.new(profile)
@@ -91,26 +105,26 @@ def main()
     verification = 'false'
   end
 
-=begin
-  puts("Type:                  #{p7.type}")
-  puts("Verification:          #{verification}")
-  puts("Signers:               #{p7.signers.size}")
-  p7.signers.each do |signer|
-    puts("SignerInfo.Issuer:     #{signer.name}")
-    puts("SignerInfo.Serial:     #{signer.serial}")
-    puts("SignerInfo.SignedTime: #{signer.signed_time}")
+  if options[:verbose]
+    puts("Type:                  #{p7.type}")
+    puts("Verification:          #{verification}")
+    puts("Signers:               #{p7.signers.size}")
+    p7.signers.each do |signer|
+      puts("SignerInfo.Issuer:     #{signer.name}")
+      puts("SignerInfo.Serial:     #{signer.serial}")
+      puts("SignerInfo.SignedTime: #{signer.signed_time}")
+    end
+    puts("Recipients:            #{p7.recipients.size}")
+    p7.recipients.each do |recipient|
+      puts("RecipientInfo.EncKey:  #{recipient.enc_key}")
+      puts("RecipientInfo.issuer:  #{recipient.issuer}")
+      puts("RecipientInfo.serial:  #{recipient.serial}")
+    end
+    puts("Certificates:          #{p7.certificates.size}")
+    p7.certificates.each do |certificate|
+      puts certificate.to_text
+    end
   end
-  puts("Recipients:            #{p7.recipients.size}")
-  p7.recipients.each do |recipient|
-    puts("RecipientInfo.EncKey:  #{recipient.enc_key}")
-    puts("RecipientInfo.issuer:  #{recipient.issuer}")
-    puts("RecipientInfo.serial:  #{recipient.serial}")
-  end
-  puts("Certificates:          #{p7.certificates.size}")
-  p7.certificates.each do |certificate|
-    puts certificate.to_text
-  end
-=end
   
   text = p7.data
 

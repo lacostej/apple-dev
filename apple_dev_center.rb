@@ -68,6 +68,7 @@ def parse_config(options)
   decrypted = encrypted.decrypt(:symmetric, :password => secret_key)
   options[:passwd] = decrypted
   options[:teamid] = account['teamid']
+  options[:teamname] = account['teamname']
 end
 
 def parse_command_line(args)
@@ -83,8 +84,11 @@ def parse_command_line(args)
     opts.on( '-p', '--password PASSWORD', 'The apple developer store password') do |passwd|
       options[:passwd] = passwd
     end
-    opts.on( '-t', '--teamid TEAMID', 'The team ID from the Multiple Developer Programs') do |teamid|
+    opts.on( '-t', '--team-id TEAMID', 'The team ID from the Multiple Developer Programs') do |teamid|
       options[:teamid] = teamid
+    end
+    opts.on( '-T', '--team-name TEAMID', 'The team name from the Multiple Developer Programs') do |teamname|
+      options[:teamname] = teamname
     end
     opts.on( '-n', '--name', 'Use the profile name instead of its UUID as basename when saving them') do
       options[:profileFileName] = :name
@@ -169,9 +173,21 @@ class AppleDeveloperCenter
     # Select a team if you belong to multiple teams.
     form = page.form_with(:name => 'saveTeamSelection')
     if form
-      info "Selecting team '#{options[:teamid]}'."
       team_list = form.field_with(:name => 'memberDisplayId')
-      team_option = team_list.option_with(:value => options[:teamid])
+      if options[:teamid].nil? || options[:teamid] == ''
+        if options[:teamname].nil? || options[:teamname] == ''
+          # Select first team if teamid and teamname are empty.
+          team_option = team_list.options.first
+        else
+          # Select team by name.
+          team_option = team_list.option_with(:text => options[:teamname])
+        end
+      else
+        # Select team by id.
+        team_option = team_list.option_with(:value => options[:teamid])
+      end
+
+      info "Selecting team '#{team_option.text}' (ID: #{team_option.value})."
       team_option.select
       btn = form.button_with(:name => 'action:saveTeamSelection!save')
       form.click_button(btn)
@@ -288,7 +304,9 @@ class AppleDeveloperCenter
   def fetch_site_data(options)
     site = {}
     @apple_cert_file = "#{options[:dumpDir]}/AppleIncRootCertificate.cer"
-    @agent.get(@apple_cert_url).save(@apple_cert_file)
+    if not File.exists?(@apple_cert_file)
+      @agent.get(@apple_cert_url).save(@apple_cert_file)
+    end
 
     site[:devices] = read_devices(options)
     site[:profiles] = read_all_profiles(options)
