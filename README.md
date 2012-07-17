@@ -1,4 +1,4 @@
-# What is this? #
+# Apple::Dev
 
 This is a set of scripts written in Ruby used to manage provisioning profiles and certificates either locally or through the Apple developer portal.
 
@@ -11,7 +11,24 @@ They are used in continuous integration environments (for example using [Jenkins
 to manipulate provisioning profiles, you will need [plist](http://plist.rubyforge.org/Plist.html) and [json](http://flori.github.com/json/)
 to access the Apple development center site, you will need [mechanize >= 2.2](http://mechanize.rubyforge.org/) and [encrypted_strings](https://github.com/pluginaweek/encrypted_strings)
 
-# provisioningprofile.rb #
+## Installation
+
+Add this line to your application's Gemfile:
+
+    gem 'apple-dev'
+
+And then execute:
+
+    $ bundle
+
+Or install it yourself as:
+
+    $ gem install apple-dev
+
+## Usage
+
+
+### provisioningprofile.rb #
 
 	$ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -d -O plist.xml
 	$ tail plist.xml
@@ -32,7 +49,7 @@ to access the Apple development center site, you will need [mechanize >= 2.2](ht
 	$ ruby ./mobileprovisioning.rb 65RAGE----.mobileprovision -d Name
 	TestFlight WWTK All Projects
 
-# apple_dev_center.rb #
+### apple_dev_center.rb #
 
 	$ ./apple_dev_center.rb -u adminwwtk@wewanttoknow.com -p xxxxxxx -d devcenter -O devcenter/site.json
 	$ ls devcenter/
@@ -66,7 +83,7 @@ to access the Apple development center site, you will need [mechanize >= 2.2](ht
 	    ]
 	}
 
-## storing the password (encrypted in a configuration file instead) ##
+#### storing the password (encrypted in a configuration file instead) ##
 
 If you don't want to have your password on the command line (so that it doesn't appear in log files), you can generate a config file
 
@@ -86,7 +103,7 @@ then use the apple_dev_center script as following:
 	# or to pick the default account and an empty secret key
 	$ ./apple_dev_center.rb -C /path/to/config/apple_dev_center.config -d
 	
-# use with Jenkins #
+### use with Jenkins #
 
 in a CI environment, you will probably want to avoid printing out the password and use the config. I like the build secrets plugin to be able to send that to any slave.
 	
@@ -131,3 +148,11 @@ Question & feedback: jerome.lacoste@gmail.com
 
 https://github.com/quadion/iOSValidation where I got some tips for parsing provisioning profiles
 http://www.peerassembly.com/2011/09/30/Downloading-UDID-From-Apple/ where I got some tips for downloading data from Apple developer center
+
+## Contributing
+
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Added some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
