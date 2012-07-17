@@ -24,6 +24,7 @@ def parse_config(options)
   decrypted = encrypted.decrypt(:symmetric, :password => secret_key)
   options[:passwd] = decrypted
   options[:teamid] = account['teamid']
+  options[:teamname] = account['teamname']
 end
 
 def parse_command_line(args)
@@ -39,8 +40,11 @@ def parse_command_line(args)
     opts.on( '-p', '--password PASSWORD', 'The apple developer store password') do |passwd|
       options[:passwd] = passwd
     end
-    opts.on( '-t', '--teamid TEAMID', 'The team ID from the Multiple Developer Programs') do |teamid|
+    opts.on( '-t', '--team-id TEAMID', 'The team ID from the Multiple Developer Programs') do |teamid|
       options[:teamid] = teamid
+    end
+    opts.on( '-T', '--team-name TEAMID', 'The team name from the Multiple Developer Programs') do |teamname|
+      options[:teamname] = teamname
     end
     opts.on( '-n', '--name', 'Use the profile name instead of its UUID as basename when saving them') do
       options[:profileFileName] = :name
@@ -82,6 +86,7 @@ def dump(text, file)
     puts text
   end
 end
+
 
 def dumpSite(options)
   @ADC = Apple::Dev::IOSProvisioningPortal.new()

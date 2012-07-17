@@ -11,6 +11,7 @@ opts.login = ""
 opts.password = ""
 opts.secret_key = ""
 opts.teamid = ""
+opts.teamname = ""
 
 # Specify options.
 options = OptionParser.new do |options|
@@ -20,6 +21,7 @@ options = OptionParser.new do |options|
   options.on("-p", "--password PASS", "Login password") {|p| opts.password = p}
   options.separator "Optional options:"
   options.on("-t", "--team-id TID", "Team ID - The team ID from the Multiple Developer Programs") {|t| opts.teamid = t}
+  options.on("-T", "--team-name TEAMNAME", "Team name - The team name from the Multiple Developer Programs") {|n| opts.teamname = n}
   options.on("-s", "--secret-key SECRET-KEY", "Secret key") {|s| opts.secret_key = s}
   options.separator "General options:"
   options.on_tail("-h", "--help", "Show this message") do
@@ -56,6 +58,7 @@ account = {}
 account['login'] = opts.login
 account['password'] = encrypted
 account['teamid'] = opts.teamid
+account['teamname'] = opts.teamname
 
 data['accounts'] = [account]
 

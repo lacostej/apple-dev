@@ -3,8 +3,6 @@ require "rubygems"
 require "bundler/setup"
 require 'apple-dev'
 
-USAGE = "Usage: #{File.basename($0)} profileFile [-t] [-d [key]] [-c certificate] [-O output] [-h]"
-
 def ensure_file_specified_and_exists(name, file)
   raise OptionParser::MissingArgument, name if file.nil?
   raise OptionParser::InvalidArgument, "'#{file}' #{name} file doesn't exists" if not File.exists?(file)
@@ -13,27 +11,45 @@ end
 def parse_command_line(args)
   options = {}
 
-  OptionParser.new { |opts|
-    opts.banner = USAGE
+  opts = OptionParser.new { |opts|
+    opts.banner = "Usage: #{File.basename($0)} profileFile options"
+    opts.separator("Options:")
     
-    opts.on( '-d', '--dump [KEY]', 'dumps a particular key or the full xml') do |key|
+    opts.on( '-d', '--dump [KEY]', 'Dump a particular KEY or the full XML.') do |key|
       options[:dump] = true
       options[:dumpKey] = key
     end
-    opts.on( '-t', '--type', 'prints the type of the profile. distribution or development') do |key|
+    opts.on( '-t', '--type', 'Prints the type of the profile (distribution or development).') do |key|
       options[:type] = true
     end
-    opts.on( '-O', '--output FILE', 'writes output to the specified file. Uses standard output otherwise') do |output|
+    opts.on( '-o', '--output FILE', 'Write output to FILE. Default is standard output.') do |output|
       options[:output] = output
-    end
-    opts.on( '-h', '--help', 'Display this screen' ) do
-      puts opts
-      exit
     end
     opts.on('-c', '--certificate CERTIFICATE', 'Use CERTIFICATE to verify profile.') do |certificate|
       options[:certificate] = certificate
     end
-  }.parse!(args)
+    options[:verbose] = false
+    opts.on('-v', '--verbose', "Show the profile's type, verification, signers, recipients and certificates.") do
+      options[:verbose] = true
+    end
+    opts.on_tail( '-h', '--help', 'Display this screen.' ) do
+      puts opts
+      exit
+    end
+  }
+  
+  if (args.empty?)
+    puts opts
+    exit
+  end
+  
+  begin 
+    opts.parse!(args)
+  rescue OptionParser::ParseError => e
+    puts "Found #{e}"
+    puts opts
+    exit 1
+  end
 
   options[:profile] = args[0]
   ensure_file_specified_and_exists("profile", options[:profile])
@@ -50,10 +66,14 @@ def dump(text, file)
 end
 
 def dumpProfile(pp, options)
-  text = pp
-  key = options[:dumpKey]
-  if key
-    text = pp[key]
+  if pp.text.nil?
+    puts "The profile content is nil. Maybe the verification failed? Try -v."
+  else
+    text = pp
+    key = options[:dumpKey]
+    if key
+      text = pp[key]
+    end
   end
   dump(text, options[:output])
 end
@@ -66,17 +86,12 @@ def dumpProfileType(pp, options)
 end
 
 def main()
-  begin
-    options = parse_command_line(ARGV)
-  rescue OptionParser::ParseError => e
-    puts "Invalid argument: #{e}"
-    puts "#{USAGE}"
-    exit 1
-  end
+  options = parse_command_line(ARGV)
   
   pp = Apple::Dev::ProvisioningProfile.new(options[:profile], options[:certificate])
 
-  #pp.dump
+  if options[:verbose]
+    pp.dump
   
   if (options[:dump])
     dumpProfile(pp, options)

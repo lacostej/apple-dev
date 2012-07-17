@@ -89,9 +89,21 @@ module Apple
 	    # Select a team if you belong to multiple teams.
 	    form = page.form_with(:name => 'saveTeamSelection')
 	    if form
-	      info "Selecting team '#{options[:teamid]}'."
 	      team_list = form.field_with(:name => 'memberDisplayId')
-	      team_option = team_list.option_with(:value => options[:teamid])
+	      if options[:teamid].nil? || options[:teamid] == ''
+	        if options[:teamname].nil? || options[:teamname] == ''
+	          # Select first team if teamid and teamname are empty.
+	          team_option = team_list.options.first
+	        else
+	          # Select team by name.
+	          team_option = team_list.option_with(:text => options[:teamname])
+	        end
+	      else
+	        # Select team by id.
+	        team_option = team_list.option_with(:value => options[:teamid])
+	      end
+
+	      info "Selecting team '#{team_option.text}' (ID: #{team_option.value})."
 	      team_option.select
 	      btn = form.button_with(:name => 'action:saveTeamSelection!save')
 	      form.click_button(btn)
@@ -208,7 +220,7 @@ module Apple
 	  def fetch_site_data(options)
 	    site = {}
 	    @apple_cert_file = "#{options[:dumpDir]}/AppleIncRootCertificate.cer"
-	    @agent.get(@apple_cert_url).save(@apple_cert_file)
+	    @agent.get(@apple_cert_url).save(@apple_cert_file) if not File.exists?(@apple_cert_file)
 
 	    site[:devices] = read_devices(options)
 	    site[:profiles] = read_all_profiles(options)
