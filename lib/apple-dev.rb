@@ -1,6 +1,7 @@
-require "apple-dev/version"
+#require "apple-dev/version"
 require 'mechanize'
 require 'json'
+require 'plist'
 #require 'logger' # Use this to log mechanize.
 
 module Apple
@@ -221,11 +222,7 @@ module Apple
 	  
 	  # Return the uuid of the specified mobile provisioning file.
 	  def pp_uuid(ppfile)
-	    # FIXME extract script into a reusable ruby library    
-	    uuid = `#{INSTALL_DIR}/mobileprovisioning.rb #{ppfile} -c #{@apple_cert_file} -d UUID`
-	    # Strip trailing '\n, \r, \r\n'.
-	    uuid = uuid.chomp()
-	    uuid
+	  	ProvisioningProfile.new(ppfile, @apple_cert_file)["UUID"]
 	  end
 	  
 	  def download_profiles(profiles, dumpDir, profileFileName)
@@ -256,5 +253,59 @@ module Apple
 	  end
 	end
 
+	class ProvisioningProfile
+	  def initialize(file, certificate=nil)
+		@profile = File.read(file)
+		@p7 = OpenSSL::PKCS7.new(@profile)
+  		@store = OpenSSL::X509::Store.new
+  		if certificate != nil
+		    #curl http://www.apple.com/appleca/AppleIncRootCertificate.cer -o AppleIncRootCertificate.cer
+    		cert = OpenSSL::X509::Certificate.new(File.read(certificate))
+    		@store.add_cert(cert)
+    		@verification = @p7.verify([cert], @store)
+		else
+    		@p7.verify([], @store)
+    		@verification = false
+  		end
+
+		@text = @p7.data
+	  end
+
+	  def dump
+		  puts("Type:                  #{@p7.type}")
+		  puts("Verification:          #{@verification}")
+		  if @verification
+			  puts("Signers:               #{@p7.signers.size}")
+			  @p7.signers.each do |signer|
+			    puts("SignerInfo.Issuer:     #{signer.name}")
+			    puts("SignerInfo.Serial:     #{signer.serial}")
+			    puts("SignerInfo.SignedTime: #{signer.signed_time}")
+			  end
+		  puts("Recipients:            #{@p7.recipients.size}")
+		  @p7.recipients.each do |recipient|
+		    puts("RecipientInfo.EncKey:  #{recipient.enc_key}")
+		    puts("RecipientInfo.issuer:  #{recipient.issuer}")
+		    puts("RecipientInfo.serial:  #{recipient.serial}")
+		  end
+		  puts("Certificates:          #{@p7.certificates.size}")
+		  @p7.certificates.each do |certificate|
+		    puts certificate.to_text
+		  end
+			end
+		end
+
+		def [](option)
+			text = @text
+		  	if (option)
+		    	r = Plist::parse_xml(text)
+	    		text = r[option]
+	  		end
+	  		text
+		end
+
+		def text
+			@text
+		end
+	end
   end
 end

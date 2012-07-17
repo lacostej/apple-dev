@@ -1,8 +1,7 @@
 #!/usr/bin/ruby
 require "rubygems"
-require "plist"
-require "openssl"
-require "optparse"
+require "bundler/setup"
+require 'apple-dev'
 
 USAGE = "Usage: #{File.basename($0)} profileFile [-t] [-d [key]] [-c certificate] [-O output] [-h]"
 
@@ -50,19 +49,18 @@ def dump(text, file)
   end
 end
 
-def dumpProfile(xml, options)
-  text = xml
-  if (options[:dumpKey])
-    r = Plist::parse_xml(xml)  
-    text = r[options[:dumpKey]]
+def dumpProfile(pp, options)
+  text = pp
+  key = options[:dumpKey]
+  if key
+    text = pp[key]
   end
   dump(text, options[:output])
 end
 
-def dumpProfileType(xml, options)
-  r = Plist::parse_xml(xml)
+def dumpProfileType(pp, options)
   # http://stackoverflow.com/questions/1003066/what-does-get-task-allow-do-in-xcode
-  get_task_allow = r["Entitlements"]["get-task-allow"]
+  get_task_allow = pp["Entitlements"]["get-task-allow"]
   type = get_task_allow ? "development" : "distribution"
   dump(type, options[:output])
 end
@@ -76,48 +74,14 @@ def main()
     exit 1
   end
   
-  profile = File.read(options[:profile])
-  p7 = OpenSSL::PKCS7.new(profile)
-  
-  store = OpenSSL::X509::Store.new
-  
-  if options[:certificate] != nil
-    #curl http://www.apple.com/appleca/AppleIncRootCertificate.cer -o AppleIncRootCertificate.cer
-    cert = OpenSSL::X509::Certificate.new(File.read(options[:certificate]))
-    store.add_cert(cert)
-    verification = p7.verify([cert], store)
-  else
-    p7.verify([], store)
-    verification = 'false'
-  end
+  pp = Apple::Dev::ProvisioningProfile.new(options[:profile], options[:certificate])
 
-=begin
-  puts("Type:                  #{p7.type}")
-  puts("Verification:          #{verification}")
-  puts("Signers:               #{p7.signers.size}")
-  p7.signers.each do |signer|
-    puts("SignerInfo.Issuer:     #{signer.name}")
-    puts("SignerInfo.Serial:     #{signer.serial}")
-    puts("SignerInfo.SignedTime: #{signer.signed_time}")
-  end
-  puts("Recipients:            #{p7.recipients.size}")
-  p7.recipients.each do |recipient|
-    puts("RecipientInfo.EncKey:  #{recipient.enc_key}")
-    puts("RecipientInfo.issuer:  #{recipient.issuer}")
-    puts("RecipientInfo.serial:  #{recipient.serial}")
-  end
-  puts("Certificates:          #{p7.certificates.size}")
-  p7.certificates.each do |certificate|
-    puts certificate.to_text
-  end
-=end
+  #pp.dump
   
-  text = p7.data
-
   if (options[:dump])
-    dumpProfile(text, options)
+    dumpProfile(pp, options)
   elsif (options[:type])
-    dumpProfileType(text, options)
+    dumpProfileType(pp, options)
   end
 end
 
