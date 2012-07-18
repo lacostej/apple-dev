@@ -89,8 +89,8 @@ end
 
 
 def dumpSite(options)
-  @ADC = Apple::Dev::IOSProvisioningPortal.new()
-  site = @ADC.fetch_site_data(options)
+  @ADC = Apple::Dev::IOSProvisioningPortal.new(options)
+  site = @ADC.fetch_site_data()
   text = site.to_json
   dump(text, options[:output])
 end

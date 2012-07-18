@@ -48,7 +48,7 @@ module Apple
 
 
 	class IOSProvisioningPortal
-	  def initialize
+	  def initialize(options)
 	    @agent = Mechanize.new
 	    @agent.pluggable_parser.default = Mechanize::File
 	    #@agent.log = Logger.new('mechanize.log')
@@ -70,17 +70,24 @@ module Apple
 	    @certificate_urls[:distribution] = "https://developer.apple.com/ios/manage/certificates/team/distribute.action"
 
 	    @devices_url = "https://developer.apple.com/ios/manage/devices/index.action"
+
+	    @login = options[:login]
+	    @passwd = options[:passwd]
+	    @login = options[:login]
+	    @teamid = options[:teamid]
+	    @teamname = options[:teamname]
+	    @dumpDir = options[:dumpDir]
 	  end
-	  
-	  def load_page_or_login(url, options)
+
+	  def load_page_or_login(url)
 	    page = @agent.get(url)
 
 	    # Log in to Apple Developer portal if we're presented with a login form.
 	    form = page.form_with(:name => 'appleConnectForm')
 	    if form
-	      info "Logging in with Apple ID '#{options[:login]}'."
-	      form.theAccountName = options[:login]
-	      form.theAccountPW = options[:passwd]
+	      info "Logging in with Apple ID '#{@login}'."
+	      form.theAccountName = @login
+	      form.theAccountPW = @passwd
 	      form.submit
 	      page = @agent.get(url)
 	    end
@@ -90,17 +97,17 @@ module Apple
 	    form = page.form_with(:name => 'saveTeamSelection')
 	    if form
 	      team_list = form.field_with(:name => 'memberDisplayId')
-	      if options[:teamid].nil? || options[:teamid] == ''
-	        if options[:teamname].nil? || options[:teamname] == ''
+	      if @teamid.nil? || @teamid == ''
+	        if @teamname.nil? || @teamname == ''
 	          # Select first team if teamid and teamname are empty.
 	          team_option = team_list.options.first
 	        else
 	          # Select team by name.
-	          team_option = team_list.option_with(:text => options[:teamname])
+	          team_option = team_list.option_with(:text => @teamname)
 	        end
 	      else
 	        # Select team by id.
-	        team_option = team_list.option_with(:value => options[:teamid])
+	        team_option = team_list.option_with(:value => @teamid)
 	      end
 
 	      info "Selecting team '#{team_option.text}' (ID: #{team_option.value})."
@@ -130,11 +137,11 @@ module Apple
 	    profiles
 	  end  
 
-	  def read_all_profiles(options)
+	  def read_all_profiles()
 	    all_profiles = []
 	    @profile_urls.each { |type, url|
 	      info("Fetching #{type} profiles")
-	      page = load_page_or_login(url, options)
+	      page = load_page_or_login(url)
 	      all_profiles.concat(read_profiles(page, type))
 	    } 
 	    all_profiles
@@ -191,20 +198,20 @@ module Apple
 	    certs
 	  end  
 
-	  def read_all_certificates(options)
+	  def read_all_certificates()
 	    all_certs = []
 	    info("Fetching development certificates")
-	    page = load_page_or_login(@certificate_urls[:development], options)    
+	    page = load_page_or_login(@certificate_urls[:development])    
 	    all_certs.concat(read_certificates_development(page, :development))
 	    info("Fetching distribution certificates")
-	    page = load_page_or_login(@certificate_urls[:distribution], options)    
+	    page = load_page_or_login(@certificate_urls[:distribution])    
 	    all_certs.concat(read_certificates_distribution(page, :distribution))
 	    all_certs
 	  end
 
-	  def read_devices(options)
+	  def read_devices()
 	    info("Fetching devices")
-	    page = load_page_or_login(@devices_url, options)
+	    page = load_page_or_login(@devices_url)
 	  
 	    devices = []
 	    rows = page.parser.xpath('//fieldset[@id="fs-0"]/table/tbody/tr')
@@ -217,17 +224,17 @@ module Apple
 	    devices
 	  end
 
-	  def fetch_site_data(options)
+	  def fetch_site_data()
 	    site = {}
-	    @apple_cert_file = "#{options[:dumpDir]}/AppleIncRootCertificate.cer"
+	    @apple_cert_file = "#{@dumpDir}/AppleIncRootCertificate.cer"
 	    @agent.get(@apple_cert_url).save(@apple_cert_file) if not File.exists?(@apple_cert_file)
 
-	    site[:devices] = read_devices(options)
-	    site[:profiles] = read_all_profiles(options)
-	    site[:certificates] = read_all_certificates(options)
+	    site[:devices] = read_devices()
+	    site[:profiles] = read_all_profiles()
+	    site[:certificates] = read_all_certificates()
 
-	    download_profiles(site[:profiles], options[:dumpDir], options[:profileFileName])
-	    download_certificates(site[:certificates], options[:dumpDir])
+	    download_profiles(site[:profiles], @dumpDir, @profileFileName)
+	    download_certificates(site[:certificates], @dumpDir)
 	    
 	    site
 	  end
