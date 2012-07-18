@@ -38,7 +38,7 @@ if [ $? -ne 0 ]; then
 fi
 
 #ls "$PP_DIR"
-new_pp_uuid=`../offline_apple_dev_center.rb ${SITE_JSON} ${profile_type} "${profile_name}"`
+new_pp_uuid=`../bin/offline_apple_dev_center.rb ${SITE_JSON} ${profile_type} "${profile_name}"`
 debug "new_pp_uuid ${new_pp_uuid}"
 
 # 1- install in PP_DIR if necessary
