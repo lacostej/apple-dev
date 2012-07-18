@@ -2,6 +2,7 @@
 require 'rubygems'
 require "bundler/setup"
 require 'apple-dev'
+require 'encrypted_strings'
 
 INSTALL_DIR = File.dirname($0)
 USAGE =  "Usage: #{File.basename($0)} [-d [DIR]] [-u login] [-p password] [-t teamid] [-O file] [-C config] [-S secret_key] [-n] [-h]"
