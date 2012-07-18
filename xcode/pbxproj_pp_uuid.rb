@@ -5,59 +5,85 @@
 require 'rubygems'
 require 'json'
 require 'logger'
+require 'optparse'
 
 @log=Logger.new(STDOUT)
 @log.level = Logger::WARN
 
-def usage()
-	puts "USAGE: #{ARGV[0]} file configuration action [value]"
-	puts "\tfile: the xcode project file"
-	puts "\tconfiguration: name of the configuration e.g. 'Ad Hoc'"
-	puts "\taction: get or set"
-	puts "\tvalue: the new uuid to set (if action is 'set')"
+def ensure_file_specified_and_exists(name, file)
+  raise OptionParser::MissingArgument, name if file.nil?
+  raise OptionParser::InvalidArgument, "'#{file}' #{name} file doesn't exists" if not File.exists?(file)
+end
+
+def parse_command_line(args)
+	options = {}
+
+	opts = OptionParser.new { |opts|
+		opts.banner = "Usage: #{File.basename($0)} jsonProjectFile options"
+		opts.separator("Options:")
+
+		opts.on( '-p', '--profile-name [NAME]', 'The provisioning profile to work with.') do |key|
+			options[:profile] = key
+		end
+		opts.on( '-g', '--get', 'Get the current value') do
+		end
+		opts.on( '-s', '--set NEW', 'sets the new value') do |value|
+			options[:value] = value
+		end
+		opts.on('-v', '--verbose', "Verbose output") do
+			@log.level = Logger::DEBUG
+		end
+		opts.on_tail( '-h', '--help', 'Display this screen.' ) do
+			puts opts
+			exit
+		end
+		begin 
+			opts.parse!(args)
+		rescue OptionParser::ParseError => e
+			puts "Found #{e}"
+			puts opts
+			exit 1
+		end
+	}
+
+	options[:projfile] = args[0]
+	ensure_file_specified_and_exists("json pbxproj", options[:projfile])
+
+	options
 end
 
 def debug(msg)
 	@log.debug("DEBUG #{msg}")
 end
 
-if (ARGV.length < 3 || ARGV.length > 4)
-	puts "ERROR invalid arguments"
-	usage()
-	exit
+def main()
+	options = parse_command_line(ARGV)
+
+	file=options[:projfile]
+	configuration=options[:profile]
+	value=options[:value]
+
+	debug("ARGUMENTS: f:#{file} f:#{configuration} v:#{value} ")
+
+
+	json = File.open(file, "r") { |f| JSON f.read }
+
+	rootObj=json['rootObject']
+	debug "rootObj #{rootObj}"
+
+	buildConfigurationList=json['objects'][rootObj]['buildConfigurationList']
+	debug "buildConfigurationList #{buildConfigurationList}"
+
+	buildConfigurationObjId=json['objects'][buildConfigurationList]['buildConfigurations'].find { |x| json['objects'][x]['name'] == configuration }
+	debug "buildConfigurationObjId for #{configuration}: #{buildConfigurationObjId}"
+
+	buildSettings=json['objects'][buildConfigurationObjId]['buildSettings']
+	if !value.nil?
+		buildSettings['PROVISIONING_PROFILE[sdk=iphoneos*]']=value
+		File.open(file, "w") { |f| f.write(json.to_json) }
+	else
+		puts buildSettings['PROVISIONING_PROFILE[sdk=iphoneos*]']
+	end
 end
 
-file=ARGV[0]
-configuration=ARGV[1]
-action=ARGV[2]
-value=ARGV[3]
-
-debug("ARGUMENTS: f:#{file} f:#{configuration} a:#{action} #{value} ")
-
-if ! File.exist?(file)
-	puts "ERROR: $#{file} file not found"
-	usage
-	exit
-end
-
-json = File.open(file, "r") { |f| JSON f.read }
-
-rootObj=json['rootObject']
-debug "rootObj #{rootObj}"
-
-buildConfigurationList=json['objects'][rootObj]['buildConfigurationList']
-debug "buildConfigurationList #{buildConfigurationList}"
-
-buildConfigurationObjId=json['objects'][buildConfigurationList]['buildConfigurations'].find { |x| json['objects'][x]['name'] == configuration }
-debug "buildConfigurationObjId for #{configuration}: #{buildConfigurationObjId}"
-
-buildSettings=json['objects'][buildConfigurationObjId]['buildSettings']
-case action
-when 'set'
-	buildSettings['PROVISIONING_PROFILE[sdk=iphoneos*]']=value
-	File.open(file, "w") { |f| f.write(json.to_json) }
-when 'get'
-	puts buildSettings['PROVISIONING_PROFILE[sdk=iphoneos*]']
-else
-	puts "INVALID action #{action}"
-end
+main
