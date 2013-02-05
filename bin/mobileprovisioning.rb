@@ -92,6 +92,7 @@ def main()
 
   if options[:verbose]
     pp.dump
+  end
   
   if (options[:dump])
     dumpProfile(pp, options)
