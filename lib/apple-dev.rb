@@ -248,7 +248,8 @@ module Apple
 	    profiles.each do |p|
 	      if p.statusXcode != "Active"
 	        info("Profile '#{p.name}' has status '#{p.statusXcode}'. Download skipped.")
-	      else
+	        next
+	      end
 	      filename = "#{dumpDir}/#{p.blob_id}.mobileprovision"
 	      info("Downloading profile #{p.blob_id} '#{p.name}'.")
 	      @agent.get(p.download_url).save(filename)
@@ -262,7 +263,6 @@ module Apple
 	      newfilename = "#{dumpDir}/#{basename}.mobileprovision"
 	      File.rename(filename, "#{newfilename}")
 	      info("Saved profile #{p.uuid} '#{p.name}' in #{newfilename}.")
-	      end
 	    end
 	  end
 
