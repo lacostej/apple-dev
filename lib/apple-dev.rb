@@ -37,9 +37,10 @@ module Apple
 	end
 
 	class Device
-	  attr_accessor :udid, :name
+	  attr_accessor :id, :udid, :name
 	  def to_json(*a)
 	    {
+	      'id' => id,
 	      'udid' => udid,
 	      'name' => name
 	    }.to_json(*a)
@@ -62,14 +63,14 @@ module Apple
 	    @apple_cert_url = "http://www.apple.com/appleca/AppleIncRootCertificate.cer"
 	    
 	    @profile_urls = {}
-	    @profile_urls[:development] = "https://developer.apple.com/ios/manage/provisioningprofiles/index.action"
-	    @profile_urls[:distribution] = "https://developer.apple.com/ios/manage/provisioningprofiles/viewDistributionProfiles.action"
+	    @profile_urls[:development] = "https://developer.apple.com/account/ios/profile/profileList.action?type=limited"
+	    @profile_urls[:distribution] = "https://developer.apple.com/account/ios/profile/profileList.action?type=production"
 
 	    @certificate_urls = {}
-	    @certificate_urls[:development] = "https://developer.apple.com/ios/manage/certificates/team/index.action"
-	    @certificate_urls[:distribution] = "https://developer.apple.com/ios/manage/certificates/team/distribute.action"
+	    @certificate_urls[:development] = "https://developer.apple.com/account/ios/certificate/certificateList.action?type=development"
+	    @certificate_urls[:distribution] = "https://developer.apple.com/account/ios/certificate/certificateList.action?type=distribution"
 
-	    @devices_url = "https://developer.apple.com/ios/manage/devices/index.action"
+	    @devices_url = "https://developer.apple.com/account/ios/device/deviceList.action"
 
 	    @login = options[:login]
 	    @passwd = options[:passwd]
@@ -115,23 +116,30 @@ module Apple
 	      btn = form.button_with(:name => 'action:saveTeamSelection!save')
 	      form.click_button(btn)
 	      page = @agent.get(url)
+	    #else
+	  	#  info("no team choice detected")
 	    end
 	    page
 	  end
 
 	  def read_profiles(page, type)
+	  	profileDataURL = page.body.match(/var profileDataURL = "(.*)";/).captures[0]
+	  	profileListUrl = page.body.match(/var profileListUrl = "(.*)";/).captures[0]
+
+	    page = @agent.get(profileDataURL)
+	    json = JSON.parse(page.body)
+
 	    profiles = []
 	    # Format each row as name,udid
-	    rows = page.parser.xpath('//fieldset[@id="fs-0"]/table/tbody/tr')
-	    rows.each do |row|
+	    json['provisioningProfiles'].each do |prof|
 	      p = Profile.new()
-	      p.blob_id = row.at_xpath('td[@class="checkbox"]/input/@value')
+	      provisioningProfileId = prof['provisioningProfileId']
+	      p.blob_id = provisioningProfileId
 	      p.type = type
-	      next if row.at_xpath('td[@class="profile"]/a/span').nil?
-	      p.name = row.at_xpath('td[@class="profile"]/a/span').text
-	      p.appid = row.at_xpath('td[@class="appid"]/text()')
-	      p.statusXcode = row.at_xpath('td[@class="statusXcode"]').text.strip.split("\n")[0]
-	      p.download_url = row.at_xpath('td[@class="action"]/a/@href')
+	      p.name = prof['name']
+	      p.appid = prof['appId']['name']
+	      p.statusXcode = prof['status']
+	      p.download_url = "https://developer.apple.com/account/ios/profile/profileContentDownload.action?displayId=#{provisioningProfileId}"
 	      profiles << p
 	    end
 	    profiles
@@ -147,78 +155,67 @@ module Apple
 	    all_profiles
 	  end
 
-	  def read_certificates_distribution(page, type)
+	  def read_certificates(page, type)
+	  	certificateDataURL = page.body.match(/var certificateDataURL = "(.*)";/).captures[0]
+	  	certificateRequestTypes = page.body.match(/var certificateRequestTypes = "(.*)";/).captures[0]
+	  	certificateStatuses = page.body.match(/var certificateStatuses = "(.*)";/).captures[0]
+	  	certificateDataURL += certificateRequestTypes + certificateStatuses
+	  	certificateListUrl = page.body.match(/var certificateListUrl = "(.*)";/).captures[0]
+		#var developerIDTypes = ['...', '...'];
+
+		#info(certificateDataURL)
+	    page = @agent.get(certificateDataURL)
+	    json = JSON.parse(page.body)
+
 	    certs = []
-	    # Format each row as name,udid  
-	    rows = page.parser.xpath('//div[@class="nt_multi"]/table/tbody/tr')
-	    rows.each do |row|
-	      last_elt = row.at_xpath('td[@class="action last"]')
-	      if last_elt.nil?
-	        msg_elt = row.at_xpath('td[@colspan="4"]/span')
-	        if !msg_elt.nil?
-	          info("-->#{msg_elt.text}")
-	        end
-	        next
-	      end
-	      next if last_elt.at_xpath('form').nil?
+	    json['certRequests'].each do |cert|
 	      c = Certificate.new()
+	      displayId = cert['certificateId']
+	      typeId = cert['certificateTypeDisplayId']
+
 	      # :displayId, :type, :name, :exp_date, :profiles, :status, :download_url
-	      c.download_url = last_elt.at_xpath('a/@href')
-	      c.displayId = c.download_url.to_s.split("certDisplayId=")[1]
+	      c.download_url = "https://developer.apple.com/account/ios/certificate/certificateContentDownload.action?displayId=#{displayId}&type=#{typeId}"
+	      c.displayId = displayId
 	      c.type = type
-	      c.name = row.at_xpath('td[@class="name"]/a').text
-	      c.exp_date = row.at_xpath('td[@class="expdate"]').text.strip
+	      c.name = cert['name']
+	      c.exp_date = cert['expirationDate']
 	      # unsure if one certificate can be mapped to several profiles
-	      c.profile = row.at_xpath('td[@class="profile"]').text.strip
-	      c.status = row.at_xpath('td[@class="status"]').text.strip
+	      c.profile = 'N/A'
+	      c.status = cert['statusString']
 	      certs << c
 	    end
 	    certs
 	  end
 	  
-	  def read_certificates_development(page, type)
-	    certs = []
-	    # Format each row as name,udid  
-	    rows = page.parser.xpath('//div[@class="nt_multi"]/table/tbody/tr')
-	    rows.each do |row|
-	      last_elt = row.at_xpath('td[@class="last"]')
-	      next if last_elt.at_xpath('form').nil?
-	      c = Certificate.new()
-	      # :displayId, :type, :name, :exp_date, :profiles, :status, :download_url
-	      c.download_url = last_elt.at_xpath('a/@href')
-	      c.displayId = c.download_url.to_s.split("certDisplayId=")[1]
-	      c.type = type
-	      c.name = row.at_xpath('td[@class="name"]/div/p').text
-	      c.exp_date = row.at_xpath('td[@class="date"]').text.strip
-	      # unsure if one certificate can be mapped to several profiles
-	      c.profile = row.at_xpath('td[@class="profiles"]').text.strip
-	      c.status = row.at_xpath('td[@class="status"]').text.strip
-	      certs << c
-	    end
-	    certs
-	  end  
-
 	  def read_all_certificates()
 	    all_certs = []
 	    info("Fetching development certificates")
 	    page = load_page_or_login(@certificate_urls[:development])    
-	    all_certs.concat(read_certificates_development(page, :development))
+	    all_certs.concat(read_certificates(page, :development))
 	    info("Fetching distribution certificates")
 	    page = load_page_or_login(@certificate_urls[:distribution])    
-	    all_certs.concat(read_certificates_distribution(page, :distribution))
+	    all_certs.concat(read_certificates(page, :distribution))
 	    all_certs
 	  end
 
 	  def read_devices()
 	    info("Fetching devices")
 	    page = load_page_or_login(@devices_url)
+
+	  	deviceDataURL = page.body.match(/var deviceDataURL = "(.*)";/).captures[0]
+	  	deviceListUrl = page.body.match(/var deviceListUrl = "(.*)";/).captures[0]
+	  	deviceEnableUrl = page.body.match(/var deviceEnableUrl = "(.*)";/).captures[0]
 	  
+		info(deviceDataURL)
+	    page = @agent.get(deviceDataURL)
+	    json = JSON.parse(page.body)
+
 	    devices = []
-	    rows = page.parser.xpath('//fieldset[@id="fs-0"]/table/tbody/tr')
-	    rows.each do |row|
+	    json['devices'].each do |device|
 	      d = Device.new()
-	      d.name = row.at_xpath('td[@class="name"]/span/text()')
-	      d.udid = row.at_xpath('td[@class="id"]/text()')
+	      d.id = device['deviceId']
+	      d.name = device['name']
+	      d.udid = device['deviceNumber']
 	      devices << d
 	    end
 	    devices
@@ -245,6 +242,10 @@ module Apple
 	  end
 	  
 	  def download_profiles(profiles, dumpDir, profileFileName)
+	  	if profiles.nil?
+	  		info("no profiles found")
+	  		return
+	  	end
 	    profiles.each do |p|
 	      if p.statusXcode != "Active"
 	        info("Profile '#{p.name}' has status '#{p.statusXcode}'. Download skipped.")
