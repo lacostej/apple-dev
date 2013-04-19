@@ -102,6 +102,10 @@ module Apple
 	    form = page.form_with(:name => 'saveTeamSelection')
 	    if form
 	      team_list = form.field_with(:name => 'memberDisplayId')
+	      if (team_list.nil?)
+	      	info "ERROR: TeamList drop_box not found"
+	      	puts form.form_node.to_s
+	      end
 	      if @teamid.nil? || @teamid == ''
 	        if @teamname.nil? || @teamname == ''
 	          # Select first team if teamid and teamname are empty.
