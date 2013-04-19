@@ -91,9 +91,13 @@ module Apple
 	      form.theAccountPW = @passwd
 	      form.submit
 	      page = @agent.get(url)
+
+	      page = select_team(page)
 	    end
 	    page
+	  end
 
+	  def select_team(page)
 	    # Select a team if you belong to multiple teams.
 	    form = page.form_with(:name => 'saveTeamSelection')
 	    if form
@@ -116,8 +120,8 @@ module Apple
 	      btn = form.button_with(:name => 'action:saveTeamSelection!save')
 	      form.click_button(btn)
 	      page = @agent.get(url)
-	    #else
-	  	#  info("no team choice detected")
+	    else
+	  	  info("no team choice detected")
 	    end
 	    page
 	  end
