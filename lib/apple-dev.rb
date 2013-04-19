@@ -4,6 +4,10 @@ require 'json'
 require 'plist'
 #require 'logger' # Use this to log mechanize.
 
+def debug(s)
+	#puts "DEBUG: #{s}"
+end
+
 module Apple
   module Dev
 	class Profile
@@ -51,6 +55,7 @@ module Apple
 	class IOSProvisioningPortal
 	  def initialize(options)
 	    @agent = Mechanize.new
+	    @agent.follow_meta_refresh = true
 	    @agent.pluggable_parser.default = Mechanize::File
 	    #@agent.log = Logger.new('mechanize.log')
 	    
@@ -81,7 +86,9 @@ module Apple
 	  end
 
 	  def load_page_or_login(url)
+	    debug "Loading #{url}"
 	    page = @agent.get(url)
+	    debug page.title
 
 	    # Log in to Apple Developer portal if we're presented with a login form.
 	    form = page.form_with(:name => 'appleConnectForm')
@@ -89,23 +96,72 @@ module Apple
 	      info "Logging in with Apple ID '#{@login}'."
 	      form.theAccountName = @login
 	      form.theAccountPW = @passwd
-	      form.submit
-	      page = @agent.get(url)
-
-	      page = select_team(page)
+	      page = form.click_button
+	      debug "Loading #{url}"
+	      #page = @agent.get(url)
+	      #puts page.body
+	      error=page.parser.xpath('//span[@class="dserror"]')
+	      if error and !error.empty?
+	      	msg = "ERROR: #{error.text}"
+	      	raise msg
+	      end
+	      debug page.title
+  	      page = select_team(page, url)
 	    end
 	    page
 	  end
 
-	  def select_team(page)
-	    # Select a team if you belong to multiple teams.
+      # Select a team if you belong to multiple teams.
+	  def select_team(page, url)
 	    form = page.form_with(:name => 'saveTeamSelection')
 	    if form
-	      team_list = form.field_with(:name => 'memberDisplayId')
-	      if (team_list.nil?)
-	      	info "ERROR: TeamList drop_box not found"
-	      	puts form.form_node.to_s
+	      page = select_team_radiobutton(form, page)
+      	  if page.nil?
+      	  	page = select_team_dropbox(form, page)
 	      end
+      	  if page.nil?
+      	  	info "ERROR select team page format has changed. Contact us"
+      	  end
+	    else
+	  	  debug "No team choice detected"
+	    end
+  		page = @agent.get(url)
+	  end
+
+	  def is_prefered_team(teamname, teamvalue, idx)
+	    if @teamid.nil? || @teamid == ''
+	      if @teamname.nil? || @teamname == ''
+	      	prefered = idx == 0
+	      else
+	        prefered = teamname == @teamname
+	      end
+	    else
+	        prefered = teamname == @teamid
+	    end
+	    prefered
+	  end
+
+	  def select_team_radiobutton(form, page)
+		team_option=nil
+		form.radiobuttons.each_with_index {|rb, idx| 
+			rbid=rb['id']
+			teamid=rb['value']   
+			name=page.parser.xpath('//label[@class="label-primary" and @for="' + rbid + '"]').text.strip
+			debug "team: " + name + " " + teamid + " " + idx.to_s
+			team_option = rb if team_option.nil? and is_prefered_team(name, teamid, idx)
+		}
+		if team_option.nil?
+			raise "ERROR: couldn't find an option that matches your criteria"
+		end
+		team_option.check
+  		btn = form.button_with(:name => 'action:saveTeamSelection!save')
+  		form.click_button(btn)
+	  end
+
+	  def select_team_dropbox(form, page)
+	      team_list = form.field_with(:name => 'memberDisplayId')
+	      return nil if (team_list.nil?)
+
 	      if @teamid.nil? || @teamid == ''
 	        if @teamname.nil? || @teamname == ''
 	          # Select first team if teamid and teamname are empty.
@@ -123,11 +179,6 @@ module Apple
 	      team_option.select
 	      btn = form.button_with(:name => 'action:saveTeamSelection!save')
 	      form.click_button(btn)
-	      page = @agent.get(url)
-	    else
-	  	  info("no team choice detected")
-	    end
-	    page
 	  end
 
 	  def read_profiles(page, type)
@@ -214,7 +265,7 @@ module Apple
 	  	deviceListUrl = page.body.match(/var deviceListUrl = "(.*)";/).captures[0]
 	  	deviceEnableUrl = page.body.match(/var deviceEnableUrl = "(.*)";/).captures[0]
 	  
-		info(deviceDataURL)
+		debug deviceDataURL
 	    page = @agent.get(deviceDataURL)
 	    json = JSON.parse(page.body)
 
