@@ -136,7 +136,7 @@ module Apple
 	        prefered = teamname == @teamname
 	      end
 	    else
-	        prefered = teamname == @teamid
+	        prefered = teamvalue == @teamid
 	    end
 	    prefered
 	  end
