@@ -1,6 +1,8 @@
 #!/usr/bin/ruby
 require 'rubygems'
 require "bundler/setup"
+require 'optparse'
+require 'yaml'
 require 'apple-dev'
 require 'encrypted_strings'
 
