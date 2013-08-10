@@ -185,7 +185,7 @@ module Apple
 	  	profileDataURL = page.body.match(/var profileDataURL = "(.*)";/).captures[0]
 	  	profileListUrl = page.body.match(/var profileListUrl = "(.*)";/).captures[0]
 
-	    page = @agent.get(profileDataURL)
+	    page = @agent.post(profileDataURL)
 	    json = JSON.parse(page.body)
 
 	    profiles = []
@@ -223,7 +223,7 @@ module Apple
 		#var developerIDTypes = ['...', '...'];
 
 		#info(certificateDataURL)
-	    page = @agent.get(certificateDataURL)
+	    page = @agent.post(certificateDataURL)
 	    json = JSON.parse(page.body)
 
 	    certs = []
@@ -266,7 +266,7 @@ module Apple
 	  	deviceEnableUrl = page.body.match(/var deviceEnableUrl = "(.*)";/).captures[0]
 	  
 		debug deviceDataURL
-	    page = @agent.get(deviceDataURL)
+	    page = @agent.post(deviceDataURL)
 	    json = JSON.parse(page.body)
 
 	    devices = []
