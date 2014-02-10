@@ -1,6 +1,8 @@
 #!/usr/bin/ruby
 require "rubygems"
 require "bundler/setup"
+require 'optparse'
+require 'yaml'
 require 'apple-dev'
 
 def ensure_file_specified_and_exists(name, file)

@@ -1,6 +1,8 @@
 #!/usr/bin/ruby
 require 'rubygems'
 require "bundler/setup"
+require 'optparse'
+require 'yaml'
 require 'apple-dev'
 require 'encrypted_strings'
 
@@ -25,8 +27,8 @@ def parse_config(options)
   decrypted = encrypted.decrypt(:symmetric, :password => secret_key)
   options[:passwd] = decrypted
   
-  #If we have a team id from command line, ignore this  
-  if (options[:teamid].nil?) 
+  #If we have a team id from command line, ignore this
+  if (options[:teamid].nil?)
     options[:teamid] = account['teamid']
     options[:teamname] = account['teamname']
   end
