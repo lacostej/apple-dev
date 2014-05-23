@@ -93,7 +93,7 @@ module Apple
 	    # Log in to Apple Developer portal if we're presented with a login form.
 	    form = page.form_with(:name => 'appleConnectForm')
 	    if form
-	      info "Logging in with Apple ID '#{@login}'."
+ 	      info "Logging in with Apple ID '#{@login}'."
 	      form.theAccountName = @login
 	      form.theAccountPW = @passwd
 	      page = form.click_button
