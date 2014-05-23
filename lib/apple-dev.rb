@@ -91,11 +91,11 @@ module Apple
 	    debug page.title
 
 	    # Log in to Apple Developer portal if we're presented with a login form.
-	    form = page.form_with(:name => 'form2')
+	    form = page.form_with(:name => 'appleConnectForm')
 	    if form
-	      info "Logging in with Apple ID '#{@login}'."
-	      form.appleId = @login
-	      form.accountPassword = @passwd
+ 	      info "Logging in with Apple ID '#{@login}'."
+	      form.theAccountName = @login
+	      form.theAccountPW = @passwd
 	      page = form.click_button
 	      debug "Loading #{url}"
 	      #page = @agent.get(url)
