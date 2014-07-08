@@ -229,22 +229,21 @@ module Apple
 	    certs = []
 	    json['certRequests'].each do |cert|
 	      canDownload = cert['canDownload']
-	      if (canDownload)
-	        c = Certificate.new()
-	        displayId = cert['certificateId']
-	        typeId = cert['certificateTypeDisplayId']
+	      next unless canDownload
+	      c = Certificate.new()
+	      displayId = cert['certificateId']
+	      typeId = cert['certificateTypeDisplayId']
 
-	        # :displayId, :type, :name, :exp_date, :profiles, :status, :download_url
-	        c.download_url = "https://developer.apple.com/account/ios/certificate/certificateContentDownload.action?displayId=#{displayId}&type=#{typeId}"
-	        c.displayId = displayId
-	        c.type = type
-	        c.name = cert['name']
-	        c.exp_date = cert['expirationDate']
-	        # unsure if one certificate can be mapped to several profiles
-	        c.profile = 'N/A'
-	        c.status = cert['statusString']
-	        certs << c
-	      end
+	      # :displayId, :type, :name, :exp_date, :profiles, :status, :download_url
+	      c.download_url = "https://developer.apple.com/account/ios/certificate/certificateContentDownload.action?displayId=#{displayId}&type=#{typeId}"
+	      c.displayId = displayId
+	      c.type = type
+	      c.name = cert['name']
+	      c.exp_date = cert['expirationDate']
+	      # unsure if one certificate can be mapped to several profiles
+	      c.profile = 'N/A'
+	      c.status = cert['statusString']
+	      certs << c
 	    end
 	    certs
 	  end
