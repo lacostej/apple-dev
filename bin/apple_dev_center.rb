@@ -26,8 +26,12 @@ def parse_config(options)
   encrypted = account['password']
   decrypted = encrypted.decrypt(:symmetric, :password => secret_key)
   options[:passwd] = decrypted
-  options[:teamid] = account['teamid']
-  options[:teamname] = account['teamname']
+  
+  #If we have a team id from command line, ignore this
+  if (options[:teamid].nil?)
+    options[:teamid] = account['teamid']
+    options[:teamname] = account['teamname']
+  end
 end
 
 def parse_command_line(args)

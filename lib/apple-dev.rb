@@ -91,11 +91,11 @@ module Apple
 	    debug page.title
 
 	    # Log in to Apple Developer portal if we're presented with a login form.
-	    form = page.form_with(:name => 'appleConnectForm')
+	    form = page.forms.first if page.uri.to_s.include?('login')
 	    if form
 	      info "Logging in with Apple ID '#{@login}'."
-	      form.theAccountName = @login
-	      form.theAccountPW = @passwd
+	      form.field_with(type: 'text').value = @login
+	      form.field_with(type: 'password').value = @passwd
 	      page = form.click_button
 	      debug "Loading #{url}"
 	      #page = @agent.get(url)
@@ -228,20 +228,23 @@ module Apple
 
 	    certs = []
 	    json['certRequests'].each do |cert|
-	      c = Certificate.new()
-	      displayId = cert['certificateId']
-	      typeId = cert['certificateTypeDisplayId']
+	      canDownload = cert['canDownload']
+	      if (canDownload)
+	        c = Certificate.new()
+	        displayId = cert['certificateId']
+	        typeId = cert['certificateTypeDisplayId']
 
-	      # :displayId, :type, :name, :exp_date, :profiles, :status, :download_url
-	      c.download_url = "https://developer.apple.com/account/ios/certificate/certificateContentDownload.action?displayId=#{displayId}&type=#{typeId}"
-	      c.displayId = displayId
-	      c.type = type
-	      c.name = cert['name']
-	      c.exp_date = cert['expirationDate']
-	      # unsure if one certificate can be mapped to several profiles
-	      c.profile = 'N/A'
-	      c.status = cert['statusString']
-	      certs << c
+	        # :displayId, :type, :name, :exp_date, :profiles, :status, :download_url
+	        c.download_url = "https://developer.apple.com/account/ios/certificate/certificateContentDownload.action?displayId=#{displayId}&type=#{typeId}"
+	        c.displayId = displayId
+	        c.type = type
+	        c.name = cert['name']
+	        c.exp_date = cert['expirationDate']
+	        # unsure if one certificate can be mapped to several profiles
+	        c.profile = 'N/A'
+	        c.status = cert['statusString']
+	        certs << c
+	      end
 	    end
 	    certs
 	  end
