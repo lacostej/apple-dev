@@ -11,14 +11,14 @@ end
 module Apple
   module Dev
 	class Profile
-	  attr_accessor :uuid, :blob_id, :type, :name, :appid, :statusXcode, :download_url
+	  attr_accessor :uuid, :blob_id, :type, :name, :appid, :status_xcode, :download_url
 	  def to_json(*a)
 	    {
 	      'uuid' => uuid,
 	      'type' => type,
 	      'name' => name,
 	      'appid' => appid,
-	      'statusXcode' => statusXcode
+	      'status_xcode' => status_xcode
 	#      'blob_id' => blob_id,      
 	#      'download_url' => download_url,
 	    }.to_json(*a)
@@ -26,10 +26,10 @@ module Apple
 	end
 
 	class Certificate
-	  attr_accessor :displayId, :type, :name, :exp_date, :profile, :status, :download_url
+	  attr_accessor :display_id, :type, :name, :exp_date, :profile, :status, :download_url
 	  def to_json(*a)
 	    {
-	      'displayId' => displayId,
+	      'display_id' => display_id,
 	      'type' => type,
 	      'name' => name,
 	      'exp_date' => exp_date,
@@ -65,24 +65,25 @@ module Apple
 	      @agent.set_proxy(Regexp.last_match(1), Regexp.last_match(2))
 	    end
 	    
-	    @apple_cert_url = "http://www.apple.com/appleca/AppleIncRootCertificate.cer"
+	    @apple_cert_url = 'http://www.apple.com/appleca/AppleIncRootCertificate.cer'
 	    
 	    @profile_urls = {}
-	    @profile_urls[:development] = "https://developer.apple.com/account/ios/profile/profileList.action?type=limited"
-	    @profile_urls[:distribution] = "https://developer.apple.com/account/ios/profile/profileList.action?type=production"
+	    @profile_urls[:development] = 'https://developer.apple.com/account/ios/profile/profileList.action?type=limited'
+	    @profile_urls[:distribution] = 'https://developer.apple.com/account/ios/profile/profileList.action?type=production'
 
 	    @certificate_urls = {}
-	    @certificate_urls[:development] = "https://developer.apple.com/account/ios/certificate/certificateList.action?type=development"
-	    @certificate_urls[:distribution] = "https://developer.apple.com/account/ios/certificate/certificateList.action?type=distribution"
+	    @certificate_urls[:development] = 'https://developer.apple.com/account/ios/certificate/certificateList.action?type=development'
+	    @certificate_urls[:distribution] = 'https://developer.apple.com/account/ios/certificate/certificateList.action?type=distribution'
 
-	    @devices_url = "https://developer.apple.com/account/ios/device/deviceList.action"
+	    @devices_url = 'https://developer.apple.com/account/ios/device/deviceList.action'
 
 	    @login = options[:login]
 	    @passwd = options[:passwd]
 	    @login = options[:login]
 	    @teamid = options[:teamid]
 	    @teamname = options[:teamname]
-	    @dumpDir = options[:dumpDir]
+	    @dump_dir = options[:dump_dir]
+			@profile_file_name = options[:profile_file_name]
 	  end
 
 	  def load_page_or_login(url)
@@ -120,10 +121,10 @@ module Apple
       	  	page = select_team_dropbox(form, page)
 	      end
       	  if page.nil?
-      	  	info "ERROR select team page format has changed. Contact us"
+      	  	info 'ERROR select team page format has changed. Contact us'
       	  end
 	    else
-	  	  debug "No team choice detected"
+	  	  debug 'No team choice detected'
 	    end
   		page = @agent.get(url)
 	  end
@@ -147,12 +148,10 @@ module Apple
 			rbid=rb['id']
 			teamid=rb['value']   
 			name=page.parser.xpath('//label[@class="label-primary" and @for="' + rbid + '"]').text.strip
-			debug "team: " + name + " " + teamid + " " + idx.to_s
+			debug 'team: ' + name + ' ' + teamid + ' ' + idx.to_s
 			team_option = rb if team_option.nil? and is_prefered_team(name, teamid, idx)
 		}
-		if team_option.nil?
-			raise "ERROR: couldn't find an option that matches your criteria"
-		end
+		raise "ERROR: couldn't find an option that matches your criteria" if team_option.nil?
 		team_option.check
   		btn = form.button_with(:name => 'action:saveTeamSelection!save')
   		form.click_button(btn)
@@ -182,23 +181,25 @@ module Apple
 	  end
 
 	  def read_profiles(page, type)
-	  	profileDataURL = page.body.match(/var profileDataURL = "(.*)";/).captures[0]
-	  	profileListUrl = page.body.match(/var profileListUrl = "(.*)";/).captures[0]
+	  	profile_data_url = page.body.match(/var profileDataURL = "(.*)";/).captures[0]
+	  	profile_list_url = page.body.match(/var profileListUrl = "(.*)";/).captures[0]
 
-	    page = @agent.post(profileDataURL)
+	    page = @agent.post(profile_data_url)
 	    json = JSON.parse(page.body)
 
 	    profiles = []
 	    # Format each row as name,udid
 	    json['provisioningProfiles'].each do |prof|
 	      p = Profile.new()
-	      provisioningProfileId = prof['provisioningProfileId']
-	      p.blob_id = provisioningProfileId
+	      provisioning_profile_id = prof['provisioningProfileId']
+	      p.blob_id = provisioning_profile_id
 	      p.type = type
 	      p.name = prof['name']
-	      p.appid = prof['appId']['name']
-	      p.statusXcode = prof['status']
-	      p.download_url = "https://developer.apple.com/account/ios/profile/profileContentDownload.action?displayId=#{provisioningProfileId}"
+				# This key is obsolete, so I will use nil for now
+	      # p.appid = prof['appId']['name']
+	      p.appid = nil
+	      p.status_xcode = prof['status']
+	      p.download_url = "https://developer.apple.com/account/ios/profile/profileContentDownload.action?displayId=#{provisioning_profile_id}"
 	      profiles << p
 	    end
 	    profiles
@@ -215,28 +216,28 @@ module Apple
 	  end
 
 	  def read_certificates(page, type)
-	  	certificateDataURL = page.body.match(/var certificateDataURL = "(.*)";/).captures[0]
-	  	certificateRequestTypes = page.body.match(/var certificateRequestTypes = "(.*)";/).captures[0]
-	  	certificateStatuses = page.body.match(/var certificateStatuses = "(.*)";/).captures[0]
-	  	certificateDataURL += certificateRequestTypes + certificateStatuses
-	  	certificateListUrl = page.body.match(/var certificateListUrl = "(.*)";/).captures[0]
+	  	certificate_data_url = page.body.match(/var certificateDataURL = "(.*)";/).captures[0]
+	  	certificate_request_types = page.body.match(/var certificateRequestTypes = "(.*)";/).captures[0]
+	  	certificate_statuses = page.body.match(/var certificateStatuses = "(.*)";/).captures[0]
+	  	certificate_data_url += certificate_request_types + certificate_statuses
+	  	certificate_list_url = page.body.match(/var certificateListUrl = "(.*)";/).captures[0]
 		#var developerIDTypes = ['...', '...'];
 
-		#info(certificateDataURL)
-	    page = @agent.post(certificateDataURL)
+		#info(certificate_data_url)
+	    page = @agent.post(certificate_data_url)
 	    json = JSON.parse(page.body)
 
 	    certs = []
 	    json['certRequests'].each do |cert|
-	      canDownload = cert['canDownload']
-	      next unless canDownload
+	      can_download = cert['canDownload']
+	      next unless can_download
 	      c = Certificate.new()
-	      displayId = cert['certificateId']
-	      typeId = cert['certificateTypeDisplayId']
+	      display_id = cert['certificateId']
+	      type_id = cert['certificateTypeDisplayId']
 
 	      # :displayId, :type, :name, :exp_date, :profiles, :status, :download_url
-	      c.download_url = "https://developer.apple.com/account/ios/certificate/certificateContentDownload.action?displayId=#{displayId}&type=#{typeId}"
-	      c.displayId = displayId
+	      c.download_url = "https://developer.apple.com/account/ios/certificate/certificateContentDownload.action?displayId=#{display_id}&type=#{type_id}"
+	      c.display_id = display_id
 	      c.type = type
 	      c.name = cert['name']
 	      c.exp_date = cert['expirationDate']
@@ -250,25 +251,25 @@ module Apple
 	  
 	  def read_all_certificates()
 	    all_certs = []
-	    info("Fetching development certificates")
+	    info('Fetching development certificates')
 	    page = load_page_or_login(@certificate_urls[:development])    
 	    all_certs.concat(read_certificates(page, :development))
-	    info("Fetching distribution certificates")
+	    info('Fetching distribution certificates')
 	    page = load_page_or_login(@certificate_urls[:distribution])    
 	    all_certs.concat(read_certificates(page, :distribution))
 	    all_certs
 	  end
 
 	  def read_devices()
-	    info("Fetching devices")
+	    info('Fetching devices')
 	    page = load_page_or_login(@devices_url)
 
-	  	deviceDataURL = page.body.match(/var deviceDataURL = "(.*)";/).captures[0]
-	  	deviceListUrl = page.body.match(/var deviceListUrl = "(.*)";/).captures[0]
-	  	deviceEnableUrl = page.body.match(/var deviceEnableUrl = "(.*)";/).captures[0]
+	  	device_data_url = page.body.match(/var deviceDataURL = "(.*)";/).captures[0]
+	  	device_list_url = page.body.match(/var deviceListUrl = "(.*)";/).captures[0]
+	  	device_enable_url = page.body.match(/var deviceEnableUrl = "(.*)";/).captures[0]
 	  
-		debug deviceDataURL
-	    page = @agent.post(deviceDataURL)
+		debug device_data_url
+	    page = @agent.post(device_data_url)
 	    json = JSON.parse(page.body)
 
 	    devices = []
@@ -284,56 +285,56 @@ module Apple
 
 	  def fetch_site_data()
 	    site = {}
-	    @apple_cert_file = "#{@dumpDir}/AppleIncRootCertificate.cer"
+	    @apple_cert_file = "#{@dump_dir}/AppleIncRootCertificate.cer"
 	    @agent.get(@apple_cert_url).save(@apple_cert_file) if not File.exists?(@apple_cert_file)
 
 	    site[:devices] = read_devices()
 	    site[:profiles] = read_all_profiles()
 	    site[:certificates] = read_all_certificates()
 
-	    download_profiles(site[:profiles], @dumpDir, @profileFileName)
-	    download_certificates(site[:certificates], @dumpDir)
+	    download_profiles(site[:profiles], @dump_dir, @profile_file_name)
+	    download_certificates(site[:certificates], @dump_dir)
 	    
 	    site
 	  end
 	  
 	  # Return the uuid of the specified mobile provisioning file.
 	  def pp_uuid(ppfile)
-	  	ProvisioningProfile.new(ppfile, @apple_cert_file)["UUID"]
+	  	ProvisioningProfile.new(ppfile, @apple_cert_file)['UUID']
 	  end
 	  
-	  def download_profiles(profiles, dumpDir, profileFileName)
+	  def download_profiles(profiles, dump_dir, profile_file_name)
 	  	if profiles.nil?
-	  		info("no profiles found")
+	  		info('no profiles found')
 	  		return
 	  	end
 	    profiles.each do |p|
-	      if p.statusXcode != "Active"
-	        info("Profile '#{p.name}' has status '#{p.statusXcode}'. Download skipped.")
+	      if p.status_xcode != 'Active'
+	        info("Profile '#{p.name}' has status '#{p.status_xcode}'. Download skipped.")
 	        next
 	      end
-	      filename = "#{dumpDir}/#{p.blob_id}.mobileprovision"
+	      filename = "#{dump_dir}/#{p.blob_id}.mobileprovision"
 	      info("Downloading profile #{p.blob_id} '#{p.name}'.")
 	      @agent.get(p.download_url).save(filename)
 	      uuid = pp_uuid(filename)
 	      p.uuid = uuid
-	      if profileFileName == :uuid
+	      if profile_file_name == :uuid
 	        basename = p.uuid
 	      else
 	        basename = p.name
 	      end
-	      newfilename = "#{dumpDir}/#{basename}.mobileprovision"
+	      newfilename = "#{dump_dir}/#{basename}.mobileprovision"
 	      File.rename(filename, "#{newfilename}")
 	      info("Saved profile #{p.uuid} '#{p.name}' in #{newfilename}.")
 	    end
 	  end
 
-	  def download_certificates(certs, dumpDir)
+	  def download_certificates(certs, dump_dir)
 	    certs.each do |c|
-	      filename = "#{dumpDir}/#{c.displayId}.cer"
-	      info("Downloading cert #{c.displayId} -#{c.type}- '#{c.name}'.")
+	      filename = "#{dump_dir}/#{c.display_id}.cer"
+	      info("Downloading cert #{c.display_id} -#{c.type}- '#{c.name}'.")
 	      @agent.get(c.download_url).save(filename)
-	      info("Saved cert #{c.displayId} '#{c.name}' in #{filename}.")
+	      info("Saved cert #{c.display_id} '#{c.name}' in #{filename}.")
 	    end
 	  end
 	end
@@ -381,7 +382,7 @@ module Apple
 
 		def [](option)
 			text = @text
-		  	if (option)
+		  	if option
 		    	r = Plist::parse_xml(text)
 	    		text = r[option]
 	  		end

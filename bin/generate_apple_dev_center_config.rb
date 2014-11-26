@@ -7,31 +7,31 @@ require 'yaml'
 
 # Set default options.
 opts = OpenStruct.new
-opts.login = ""
-opts.password = ""
-opts.secret_key = ""
-opts.teamid = ""
-opts.teamname = ""
+opts.login = ''
+opts.password = ''
+opts.secret_key = ''
+opts.teamid = ''
+opts.teamname = ''
 
 # Specify options.
 options = OptionParser.new do |options|
   options.banner = "Usage: #{File.basename($0)} [options]\nGenerates a YAML config file for apple_dev_center.rb"
-  options.separator "Mandatory options:"
-  options.on("-l", "--login LOGIN", "Login e-mail address") {|l| opts.login = l}
-  options.on("-p", "--password PASS", "Login password") {|p| opts.password = p}
-  options.separator "Optional options:"
-  options.on("-t", "--team-id TID", "Team ID - The team ID from the Multiple Developer Programs") {|t| opts.teamid = t}
-  options.on("-T", "--team-name TEAMNAME", "Team name - The team name from the Multiple Developer Programs") {|n| opts.teamname = n}
-  options.on("-s", "--secret-key SECRET-KEY", "Secret key") {|s| opts.secret_key = s}
-  options.separator "General options:"
-  options.on_tail("-h", "--help", "Show this message") do
+  options.separator 'Mandatory options:'
+  options.on('-l', '--login LOGIN', 'Login e-mail address') {|l| opts.login = l}
+  options.on('-p', '--password PASS', 'Login password') {|p| opts.password = p}
+  options.separator 'Optional options:'
+  options.on('-t', '--team-id TID', 'Team ID - The team ID from the Multiple Developer Programs') {|t| opts.teamid = t}
+  options.on('-T', '--team-name TEAMNAME', 'Team name - The team name from the Multiple Developer Programs') {|n| opts.teamname = n}
+  options.on('-s', '--secret-key SECRET-KEY', 'Secret key') {|s| opts.secret_key = s}
+  options.separator 'General options:'
+  options.on_tail('-h', '--help', 'Show this message') do
     puts options
     exit
   end
 end
 
 # Show usage if no arguments are given.
-if (ARGV.empty?)
+if ARGV.empty?
   puts options
   exit
 end

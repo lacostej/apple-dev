@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
-require "rubygems"
-require "bundler/setup"
+require 'rubygems'
+require 'bundler/setup'
 require 'optparse'
 require 'yaml'
 require 'apple-dev'
@@ -15,13 +15,13 @@ def parse_command_line(args)
 
   opts = OptionParser.new { |opts|
     opts.banner = "Usage: #{File.basename($0)} profileFile options"
-    opts.separator("Options:")
+    opts.separator('Options:')
     
     opts.on( '-d', '--dump [KEY]', 'Dump a particular KEY or the full XML.') do |key|
       options[:dump] = true
-      options[:dumpKey] = key
+      options[:dump_key] = key
     end
-    opts.on( '-t', '--type', 'Prints the type of the profile (distribution or development).') do |key|
+    opts.on( '-t', '--type', 'Prints the type of the profile (distribution or development).') do
       options[:type] = true
     end
     opts.on( '-o', '--output FILE', 'Write output to FILE. Default is standard output.') do |output|
@@ -31,7 +31,7 @@ def parse_command_line(args)
       options[:certificate] = certificate
     end
     options[:verbose] = false
-    opts.on('-v', '--verbose', "Show the profile's type, verification, signers, recipients and certificates.") do
+    opts.on('-v', '--verbose', 'Show the profile\'s type, verification, signers, recipients and certificates.') do
       options[:verbose] = true
     end
     opts.on_tail( '-h', '--help', 'Display this screen.' ) do
@@ -40,7 +40,7 @@ def parse_command_line(args)
     end
   }
   
-  if (args.empty?)
+  if args.empty?
     puts opts
     exit
   end
@@ -54,25 +54,25 @@ def parse_command_line(args)
   end
 
   options[:profile] = args[0]
-  ensure_file_specified_and_exists("profile", options[:profile])
+  ensure_file_specified_and_exists('profile', options[:profile])
   
   options
 end
 
 def dump(text, file)
-  if (file)
+  if file
     File.open(file, 'w') { |f| f.write(text) }
   else
     puts text
   end
 end
 
-def dumpProfile(pp, options)
+def dump_profile(pp, options)
   if pp.text.nil?
-    puts "The profile content is nil. Maybe the verification failed? Try -v."
+    puts 'The profile content is nil. Maybe the verification failed? Try -v.'
   else
     text = pp
-    key = options[:dumpKey]
+    key = options[:dump_key]
     if key
       text = pp[key]
     end
@@ -80,10 +80,10 @@ def dumpProfile(pp, options)
   dump(text, options[:output])
 end
 
-def dumpProfileType(pp, options)
+def dump_profile_type(pp, options)
   # http://stackoverflow.com/questions/1003066/what-does-get-task-allow-do-in-xcode
-  get_task_allow = pp["Entitlements"]["get-task-allow"]
-  type = get_task_allow ? "development" : "distribution"
+  get_task_allow = pp['Entitlements']['get-task-allow']
+  type = get_task_allow ? 'development' : 'distribution'
   dump(type, options[:output])
 end
 
@@ -96,10 +96,10 @@ def main()
     pp.dump
   end
   
-  if (options[:dump])
-    dumpProfile(pp, options)
-  elsif (options[:type])
-    dumpProfileType(pp, options)
+  if options[:dump]
+    dump_profile(pp, options)
+  elsif options[:type]
+    dump_profile_type(pp, options)
   end
 end
 
