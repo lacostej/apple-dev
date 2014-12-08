@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 require 'rubygems'
-require "bundler/setup"
+require 'bundler/setup'
 require 'optparse'
 require 'yaml'
 require 'apple-dev'
@@ -14,21 +14,21 @@ def info(message)
 end
 
 def parse_config(options)
-  config = YAML::load_file(options[:configFile])
-  
+  config = YAML::load_file(options[:config_file])
+
   login_to_fetch = options[:login]
   if login_to_fetch.nil? 
     login_to_fetch = config['default']
     options[:login] = login_to_fetch
   end
   account = config['accounts'].select { |a| a['login'] == login_to_fetch }[0]
-  secret_key = options[:secretKey].nil? ? "" : options[:secretKey]
+  secret_key = options[:secret_key].nil? ? '' : options[:secret_key]
   encrypted = account['password']
   decrypted = encrypted.decrypt(:symmetric, :password => secret_key)
   options[:passwd] = decrypted
   
   #If we have a team id from command line, ignore this
-  if (options[:teamid].nil?)
+  if options[:teamid].nil?
     options[:teamid] = account['teamid']
     options[:teamname] = account['teamname']
   end
@@ -36,7 +36,7 @@ end
 
 def parse_command_line(args)
   options = {}
-  options[:profileFileName] = :uuid
+  options[:profile_file_name] = :uuid
 
   OptionParser.new { |opts|
     opts.banner = USAGE
@@ -54,21 +54,21 @@ def parse_command_line(args)
       options[:teamname] = teamname
     end
     opts.on( '-n', '--name', 'Use the profile name instead of its UUID as basename when saving them') do
-      options[:profileFileName] = :name
+      options[:profile_file_name] = :name
     end
     opts.on( '-d', '--dump [DIR]', 'Dump the site content as JSON format to current dir (or to the optional specified directory, that will be created if non existent).') do |dir|
       options[:dump] = true
-      options[:dumpDir] = dir.nil? ? "." : dir
-      if not File.exists?(options[:dumpDir])
-        Dir.mkdir(options[:dumpDir])
+      options[:dump_dir] = dir.nil? ? '.' : dir
+      if not File.exists?(options[:dump_dir])
+        Dir.mkdir(options[:dump_dir])
       end
     end
     opts.on( '-S', '--seed SEED', 'The secret_key for the config file if required.') do |secret_key|
-      options[:secretKey] = secret_key.nil? ? "" : secret_key
+      options[:secret_key] = secret_key.nil? ? '' : secret_key
     end
-    opts.on( '-C', '--config FILE', 'Fetch password (and optionally default user and team id) information from the specified config file, with the optional secret_key.') do |config_file, secret_key|
-      options[:configFile] = config_file
-      if not File.exists?(options[:configFile])
+    opts.on( '-C', '--config FILE', 'Fetch password ``(and optionally default user and team id) information from the specified config file, with the optional secret_key.') do |config_file, secret_key|
+      options[:config_file] = config_file
+      if not File.exists?(options[:config_file])
         raise OptionParser::InvalidArgument, "Specified '#{config_file}' file doesn't exist."
       end
     end
@@ -81,13 +81,13 @@ def parse_command_line(args)
     end    
   }.parse!(args)
 
-  parse_config(options) unless options[:configFile].nil?
+  parse_config(options) unless options[:config_file].nil?
 
   options
 end
 
 def dump(text, file)
-  if (file)
+  if file
     File.open(file, 'w') { |f| f.write(text) }
   else
     puts text
@@ -95,7 +95,7 @@ def dump(text, file)
 end
 
 
-def dumpSite(options)
+def dump_site(options)
   @ADC = Apple::Dev::IOSProvisioningPortal.new(options)
   site = @ADC.fetch_site_data()
   text = site.to_json
@@ -111,8 +111,8 @@ def main()
     exit 1
   end
 
-  if (options[:dump])
-    dumpSite(options)
+  if options[:dump]
+    dump_site(options)
   end
 end
 
