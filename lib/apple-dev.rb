@@ -83,7 +83,7 @@ module Apple
 	    @teamid = options[:teamid]
 	    @teamname = options[:teamname]
 	    @dump_dir = options[:dump_dir]
-			@profile_file_name = options[:profile_file_name]
+		@profile_file_name = options[:profile_file_name]
 	  end
 
 	  def load_page_or_login(url)
@@ -91,6 +91,10 @@ module Apple
 	    page = @agent.get(url)
 	    debug page.title
 
+	    login_if_required(page, url)
+	  end
+
+	  def login_if_required (page, url)
 	    # Log in to Apple Developer portal if we're presented with a login form.
 	    form = page.forms.first if page.uri.to_s.include?('login')
 	    if form
@@ -184,8 +188,7 @@ module Apple
 	  	profile_data_url = page.body.match(/var profileDataURL = "(.*)";/).captures[0]
 	  	profile_list_url = page.body.match(/var profileListUrl = "(.*)";/).captures[0]
 
-	    page = @agent.post(profile_data_url)
-	    json = JSON.parse(page.body)
+	  	page, json = post_paginate profile_data_url, "status"
 
 	    profiles = []
 	    # Format each row as name,udid
@@ -224,8 +227,7 @@ module Apple
 		#var developerIDTypes = ['...', '...'];
 
 		#info(certificate_data_url)
-	    page = @agent.post(certificate_data_url)
-	    json = JSON.parse(page.body)
+		page, json = post_paginate certificate_data_url, "certRequestStatusCode"
 
 	    certs = []
 	    json['certRequests'].each do |cert|
@@ -252,7 +254,7 @@ module Apple
 	  def read_all_certificates()
 	    all_certs = []
 	    info('Fetching development certificates')
-	    page = load_page_or_login(@certificate_urls[:development])    
+	    page = load_page_or_login(@certificate_urls[:development])
 	    all_certs.concat(read_certificates(page, :development))
 	    info('Fetching distribution certificates')
 	    page = load_page_or_login(@certificate_urls[:distribution])    
@@ -268,9 +270,8 @@ module Apple
 	  	device_list_url = page.body.match(/var deviceListUrl = "(.*)";/).captures[0]
 	  	device_enable_url = page.body.match(/var deviceEnableUrl = "(.*)";/).captures[0]
 	  
-		debug device_data_url
-	    page = @agent.post(device_data_url)
-	    json = JSON.parse(page.body)
+		#search=&nd=1429706180729&pageSize=500&pageNumber=1&sidx=status&sort=status%253dasc
+		page, json = post_paginate device_data_url, "status"
 
 	    devices = []
 	    json['devices'].each do |device|
@@ -281,6 +282,26 @@ module Apple
 	      devices << d
 	    end
 	    devices
+	  end
+
+	  def post_paginate(url, column)
+		debug "paginating #{url}"
+	    page = @agent.post(url, {
+	     "pageSize" => 500,
+	     "pageNumber" => 1,
+	     "sort" => "#{column}%3dasc"
+		})
+	    debug page.body
+	    #@agent.log.info(page.body)
+	    json = JSON.parse(page.body)
+	    checkJson json
+	    return page, json
+	  end
+
+	  def checkJson(json)
+	    if (json['resultCode'] != 0)
+	    	raise "Failed to get results '#{json['resultString']}' from '#{json['requestUrl']}'"
+	    end
 	  end
 
 	  def fetch_site_data()
