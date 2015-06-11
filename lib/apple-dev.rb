@@ -267,7 +267,7 @@ module Apple
 	    page = load_page_or_login(@devices_url)
 
 	  	device_data_url = page.body.match(/var deviceDataURL = "(.*)";/).captures[0]
-	  	device_list_url = page.body.match(/var deviceListUrl = "(.*)";/).captures[0]
+	  	device_list_url = page.body.match(/var deviceListUrl = "(.*)"[;,]/).captures[0]
 	  	device_enable_url = page.body.match(/var deviceEnableUrl = "(.*)";/).captures[0]
 	  
 		#search=&nd=1429706180729&pageSize=500&pageNumber=1&sidx=status&sort=status%253dasc
