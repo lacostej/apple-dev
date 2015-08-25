@@ -79,11 +79,10 @@ module Apple
 
 	    @login = options[:login]
 	    @passwd = options[:passwd]
-	    @login = options[:login]
 	    @teamid = options[:teamid]
 	    @teamname = options[:teamname]
 	    @dump_dir = options[:dump_dir]
-		@profile_file_name = options[:profile_file_name]
+	    @profile_file_name = options[:profile_file_name]
 	  end
 
 	  def load_page_or_login(url)
