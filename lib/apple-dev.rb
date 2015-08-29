@@ -83,7 +83,12 @@ module Apple
 	    @teamid = options[:teamid]
 	    @teamname = options[:teamname]
 	    @dump_dir = options[:dump_dir]
-		@profile_file_name = options[:profile_file_name]
+	    @profile_file_name = options[:profile_file_name]
+	    @profile_filter = options[:profile_filter]
+	    @profile_type = options[:profile_type]
+      if @profile_type
+        @profile_type = @profile_type == 'development' ? :development : :distribution;
+      end
 	  end
 
 	  def load_page_or_login(url)
@@ -208,6 +213,16 @@ module Apple
 	    profiles
 	  end  
 
+    def filter_profiles(profiles)
+      filtered_profiles = []
+      profiles.each do |p|
+        if ( nil == @profile_filter || p.name.match( @profile_filter ) ) && ( nil == @profile_type || p.type == @profile_type )
+          filtered_profiles << p
+        end
+      end
+      filtered_profiles
+    end
+
 	  def read_all_profiles()
 	    all_profiles = []
 	    @profile_urls.each { |type, url|
@@ -310,7 +325,7 @@ module Apple
 	    @agent.get(@apple_cert_url).save(@apple_cert_file) if not File.exists?(@apple_cert_file)
 
 	    site[:devices] = read_devices()
-	    site[:profiles] = read_all_profiles()
+	    site[:profiles] = filter_profiles(read_all_profiles())
 	    site[:certificates] = read_all_certificates()
 
 	    download_profiles(site[:profiles], @dump_dir, @profile_file_name)
