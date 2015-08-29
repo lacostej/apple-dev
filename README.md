@@ -6,7 +6,7 @@ While the following tools are working as they should I am in the process of migr
 
 This is a set of scripts written in Ruby used to manage provisioning profiles and certificates either locally or through the Apple Developer Center (ADC).
 
-The project also contains a few scripts related to managing the provisioning profiles in [Xcode](iOSprovisioningprofiles/tree/master/xcode/).
+The project also contains a few scripts related to managing the provisioning profiles in [Xcode](https://github.com/lacostej/iOSprovisioningprofiles/tree/master/xcode/).
 
 They are used in continuous integration environments (for example  [Jenkins](http://jenkins-ci.org)) to update, compile & validate iOS or [Unity3d](http://unity3d.com) projects.
 
