@@ -361,12 +361,12 @@ module Apple
 
 	class ProvisioningProfile
 	  def initialize(file, certificate=nil)
-		@profile = open(file, 'rb') {|io| io.read }
+		@profile = IO.binread(file)
 		@p7 = OpenSSL::PKCS7.new(@profile)
   		@store = OpenSSL::X509::Store.new
   		if certificate != nil
 		    #curl http://www.apple.com/appleca/AppleIncRootCertificate.cer -o AppleIncRootCertificate.cer
-    		cert = OpenSSL::X509::Certificate.new(open(certificate, 'rb') {|io| io.read })
+    		cert = OpenSSL::X509::Certificate.new(IO.binread(certificate))
     		@store.add_cert(cert)
     		@verification = @p7.verify([cert], @store)
 		else
