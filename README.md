@@ -1,3 +1,7 @@
+# Note:
+
+While the following tools are working as they should I am in the process of migrating our infrastructure to [Fastlane](http://fastlane.tools/). The tool below might be rewritten using [spaceship](https://github.com/fastlane/spaceship) for all the benefits it provides.
+
 # Apple::Dev
 
 This is a set of scripts written in Ruby used to manage provisioning profiles and certificates either locally or through the Apple Developer Center (ADC).
