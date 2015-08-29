@@ -79,7 +79,6 @@ module Apple
 
 	    @login = options[:login]
 	    @passwd = options[:passwd]
-	    @login = options[:login]
 	    @teamid = options[:teamid]
 	    @teamname = options[:teamname]
 	    @dump_dir = options[:dump_dir]
@@ -377,12 +376,12 @@ module Apple
 
 	class ProvisioningProfile
 	  def initialize(file, certificate=nil)
-		@profile = File.read(file)
+		@profile = IO.binread(file)
 		@p7 = OpenSSL::PKCS7.new(@profile)
   		@store = OpenSSL::X509::Store.new
   		if certificate != nil
 		    #curl http://www.apple.com/appleca/AppleIncRootCertificate.cer -o AppleIncRootCertificate.cer
-    		cert = OpenSSL::X509::Certificate.new(File.read(certificate))
+    		cert = OpenSSL::X509::Certificate.new(IO.binread(certificate))
     		@store.add_cert(cert)
     		@verification = @p7.verify([cert], @store)
 		else

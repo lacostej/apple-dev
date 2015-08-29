@@ -66,7 +66,7 @@ def parse_command_line(args)
     opts.on( '-S', '--seed SEED', 'The secret_key for the config file if required.') do |secret_key|
       options[:secret_key] = secret_key.nil? ? '' : secret_key
     end
-    opts.on( '-C', '--config FILE', 'Fetch password ``(and optionally default user and team id) information from the specified config file, with the optional secret_key.') do |config_file, secret_key|
+    opts.on( '-C', '--config FILE', 'Fetch password (and optionally default user and team id) information from the specified config file, with the optional secret_key.') do |config_file, secret_key|
       options[:config_file] = config_file
       if not File.exists?(options[:config_file])
         raise OptionParser::InvalidArgument, "Specified '#{config_file}' file doesn't exist."
