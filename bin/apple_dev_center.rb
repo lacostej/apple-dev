@@ -7,7 +7,7 @@ require 'apple-dev'
 require 'encrypted_strings'
 
 INSTALL_DIR = File.dirname($0)
-USAGE =  "Usage: #{File.basename($0)} [-d [DIR]] [-u login] [-p password] [-t teamid] [-O file] [-C config] [-S secret_key] [-n] [-h]"
+USAGE =  "Usage: #{File.basename($0)} [-d [DIR]] [-u login] [-p password] [-t teamid] [-O file] [-C config] [-S secret_key] [-n] [-h] [-f filter] [-P profile_type]"
 
 def info(message)
   puts message
@@ -78,6 +78,15 @@ def parse_command_line(args)
     opts.on( '-h', '--help', 'Display this screen' ) do
       puts opts
       exit
+    end    
+    opts.on( '-f', '--profile-filter FILTER', 'Download profiles matching FILTER only' ) do |profile_filter|
+      options[:profile_filter] = profile_filter
+    end    
+    opts.on( '-P', '--profile-type (development|distribution)', 'Download profiles with certain type only' ) do |profile_type|
+      if ! profile_type && profile_type != 'development' && profile_type != 'distribution'
+        raise OptionParser::InvalidArgument, "Profile type used for filtering must be either 'development' or 'distribution'"
+      end
+      options[:profile_type] = profile_type
     end    
   }.parse!(args)
 
