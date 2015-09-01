@@ -85,9 +85,6 @@ module Apple
 	    @profile_file_name = options[:profile_file_name]
 	    @profile_filter = options[:profile_filter]
 	    @profile_type = options[:profile_type]
-      if @profile_type
-        @profile_type = @profile_type == 'development' ? :development : :distribution;
-      end
 	  end
 
 	  def load_page_or_login(url)
@@ -212,15 +209,15 @@ module Apple
 	    profiles
 	  end  
 
-    def filter_profiles(profiles)
-      filtered_profiles = []
-      profiles.each do |p|
-        if ( nil == @profile_filter || p.name.match( @profile_filter ) ) && ( nil == @profile_type || p.type == @profile_type )
-          filtered_profiles << p
-        end
-      end
-      filtered_profiles
-    end
+	  def filter_profiles(profiles)
+	    filtered_profiles = []
+	    profiles.each do |p|
+	      if ( @profile_filter.nil? || p.name.match( @profile_filter ) ) && ( @profile_type.nil? || p.type == @profile_type )
+	        filtered_profiles << p
+	      end
+	    end
+	    filtered_profiles
+	  end
 
 	  def read_all_profiles()
 	    all_profiles = []

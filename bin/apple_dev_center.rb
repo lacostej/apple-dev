@@ -80,13 +80,13 @@ def parse_command_line(args)
       exit
     end    
     opts.on( '-f', '--profile-filter FILTER', 'Download profiles matching FILTER only' ) do |profile_filter|
-      options[:profile_filter] = profile_filter
+      options[:profile_filter] = profile_filter.to_sym
     end    
     opts.on( '-P', '--profile-type (development|distribution)', 'Download profiles with certain type only' ) do |profile_type|
-      if ! profile_type && profile_type != 'development' && profile_type != 'distribution'
+      if ! ['development', 'distribution'].include? profile_type
         raise OptionParser::InvalidArgument, "Profile type used for filtering must be either 'development' or 'distribution'"
       end
-      options[:profile_type] = profile_type
+      options[:profile_type] = profile_type.to_sym
     end    
   }.parse!(args)
 
