@@ -79,11 +79,12 @@ module Apple
 
 	    @login = options[:login]
 	    @passwd = options[:passwd]
-	    @login = options[:login]
 	    @teamid = options[:teamid]
 	    @teamname = options[:teamname]
 	    @dump_dir = options[:dump_dir]
-		@profile_file_name = options[:profile_file_name]
+	    @profile_file_name = options[:profile_file_name]
+	    @profile_filter = options[:profile_filter]
+	    @profile_type = options[:profile_type]
 	  end
 
 	  def load_page_or_login(url)
@@ -208,6 +209,16 @@ module Apple
 	    profiles
 	  end  
 
+	  def filter_profiles(profiles)
+	    filtered_profiles = []
+	    profiles.each do |p|
+	      if ( @profile_filter.nil? || p.name.match( @profile_filter ) ) && ( @profile_type.nil? || p.type == @profile_type )
+	        filtered_profiles << p
+	      end
+	    end
+	    filtered_profiles
+	  end
+
 	  def read_all_profiles()
 	    all_profiles = []
 	    @profile_urls.each { |type, url|
@@ -310,7 +321,7 @@ module Apple
 	    @agent.get(@apple_cert_url).save(@apple_cert_file) if not File.exists?(@apple_cert_file)
 
 	    site[:devices] = read_devices()
-	    site[:profiles] = read_all_profiles()
+	    site[:profiles] = filter_profiles(read_all_profiles())
 	    site[:certificates] = read_all_certificates()
 
 	    download_profiles(site[:profiles], @dump_dir, @profile_file_name)
@@ -362,12 +373,12 @@ module Apple
 
 	class ProvisioningProfile
 	  def initialize(file, certificate=nil)
-		@profile = File.read(file)
+		@profile = IO.binread(file)
 		@p7 = OpenSSL::PKCS7.new(@profile)
   		@store = OpenSSL::X509::Store.new
   		if certificate != nil
 		    #curl http://www.apple.com/appleca/AppleIncRootCertificate.cer -o AppleIncRootCertificate.cer
-    		cert = OpenSSL::X509::Certificate.new(File.read(certificate))
+    		cert = OpenSSL::X509::Certificate.new(IO.binread(certificate))
     		@store.add_cert(cert)
     		@verification = @p7.verify([cert], @store)
 		else

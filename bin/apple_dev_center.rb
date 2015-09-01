@@ -7,7 +7,7 @@ require 'apple-dev'
 require 'encrypted_strings'
 
 INSTALL_DIR = File.dirname($0)
-USAGE =  "Usage: #{File.basename($0)} [-d [DIR]] [-u login] [-p password] [-t teamid] [-O file] [-C config] [-S secret_key] [-n] [-h]"
+USAGE =  "Usage: #{File.basename($0)} [-d [DIR]] [-u login] [-p password] [-t teamid] [-O file] [-C config] [-S secret_key] [-n] [-h] [-f filter] [-P profile_type]"
 
 def info(message)
   puts message
@@ -66,7 +66,7 @@ def parse_command_line(args)
     opts.on( '-S', '--seed SEED', 'The secret_key for the config file if required.') do |secret_key|
       options[:secret_key] = secret_key.nil? ? '' : secret_key
     end
-    opts.on( '-C', '--config FILE', 'Fetch password ``(and optionally default user and team id) information from the specified config file, with the optional secret_key.') do |config_file, secret_key|
+    opts.on( '-C', '--config FILE', 'Fetch password (and optionally default user and team id) information from the specified config file, with the optional secret_key.') do |config_file, secret_key|
       options[:config_file] = config_file
       if not File.exists?(options[:config_file])
         raise OptionParser::InvalidArgument, "Specified '#{config_file}' file doesn't exist."
@@ -78,6 +78,15 @@ def parse_command_line(args)
     opts.on( '-h', '--help', 'Display this screen' ) do
       puts opts
       exit
+    end    
+    opts.on( '-f', '--profile-filter FILTER', 'Download profiles matching FILTER only' ) do |profile_filter|
+      options[:profile_filter] = profile_filter
+    end    
+    opts.on( '-P', '--profile-type (development|distribution)', 'Download profiles with certain type only' ) do |profile_type|
+      if ! ['development', 'distribution'].include? profile_type
+        raise OptionParser::InvalidArgument, "Profile type used for filtering must be either 'development' or 'distribution'"
+      end
+      options[:profile_type] = profile_type.to_sym
     end    
   }.parse!(args)
 
