@@ -80,7 +80,7 @@ def parse_command_line(args)
       exit
     end    
     opts.on( '-f', '--profile-filter FILTER', 'Download profiles matching FILTER only' ) do |profile_filter|
-      options[:profile_filter] = profile_filter.to_sym
+      options[:profile_filter] = profile_filter
     end    
     opts.on( '-P', '--profile-type (development|distribution)', 'Download profiles with certain type only' ) do |profile_type|
       if ! ['development', 'distribution'].include? profile_type
